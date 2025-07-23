@@ -1,0 +1,25 @@
+Real-time Updates: periodic refreshes (every 10 minutes or so) be sufficient, also if it would have a “Refresh” button to manually check would be good too
+
+Slack Integration: i dont have a preferred Slack app setup, but i already have 2 slack apps so i can modify those to use that, which would be my preference/ but im not opposed to webhook-based notifications either. 
+
+User Management: Since you mentioned Supabase auth, yes i id prefer to manage the admin vs. standard user permissions through Supabase's built-in role system, if thats is an easy configuration.
+
+Data Volume: Approximately how many materials and price changes do you expect to manage? This will help me optimize the database structure and dashboard performance.
+The material list isnt too large, under 150 items, but price changesneed to be stored also, id like the pricing change history to be at least 12 months. And here is the breakdown of each data item will store:
+Material Name, Price, Location, Manufacturer, Product Catagory, Distributor.
+Material Name : text input
+Price : Text input
+Location : Chose from either DFW, ATX, HOU, OKC, ATL, ARK, NSH.
+Manufacturer : Chose from : Atlas, Malarky, Tri-Built, CertainTeed, Tamko, GAF, Owens Corning,, IKO, Other.
+Product Catagory : Chose from : Shingle, Accessory, Decking, Underlayment, Ventilation, Flashing, Garage Door, Door Motor, Other. 
+Distributor : chose from : ABCSupply, Beacon, SRSProducts, CommericalDistributors, Other. 
+the Stock Ticker Symbol : our internal short ID will be related to the "Distributor", so ABCSupply will be ABC, Beacon will be QXO, SRSProducts will be SRS, CommercialDistributors will be CDH, Other will be OTH.
+
+
+Mobile Usage: primary use will be desktop, tablet, and if there is a special/specific optimization that can be included that would make it optimized for a television, we have tv’s in each office id like to stream this to those as well as long as they are optimized for that and it looks good.
+
+Historical Data: Id like the historical data tracking for about 12 months ,
+
+Make sure to include .env.exmaple with all the keys i need to make this work, premade templates in the correct format for updating material prices, thorough and detailed documentation via readme.md, instructions.txt.
+
+When making the data templates remember all the data necessary (Material Name, Price, Location, Manufacturer, Product Catagory, Distributor, person who submitted it via their email, date and time it was submitted for historical data and line graphs) when the webapp is displaying this data

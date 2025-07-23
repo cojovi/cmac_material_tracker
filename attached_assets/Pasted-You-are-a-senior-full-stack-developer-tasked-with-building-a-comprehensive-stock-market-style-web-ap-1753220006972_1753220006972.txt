@@ -1,0 +1,67 @@
+You are a senior full-stack developer tasked with building a comprehensive stock market-style web application for internal company material pricing management. Create a detailed technical specification and implementation plan for this project.
+
+**Project Requirements:**
+
+**Core Application Structure:**
+- Build a stock market-style dashboard for inter-company material pricing
+- Materials have frequent price changes (multiple times per month)
+- Display format: Stock name (Material Name), Stock Exchange (Distributor), Stock Ticker Symbol (Internal ID), Price
+- Backend: Database-driven architecture
+- Frontend: Modern, responsive dashboard interface
+
+**Authentication & Access Control:**
+- Supabase defualt and native login auth is fine
+- Two-tier user permissions:
+  - Standard users: View dashboard, submit price change requests
+  - Admin users: Access direct price change form with immediate database updates
+
+**Database Schema (Supabase):**
+- Material Name: text input
+- Price: text input  
+- Location: single-select from [DFW, ATX, HOU, OKC, ATL, ARK, NSH]
+- Manufacturer: single-select from [Atlas, Malarky, Tri-Built, CertainTeed, Tamko, GAF, Owens Corning, IKO, Other]
+- Product Category: single-select from [Shingle, Accessory, Decking, Underlayment, Ventilation, Flashing, Garage Door, Door Motor, Other]
+- Distributor: single-select from [ABCSupply, Beacon, SRSProducts, CommercialDistributors, Other]
+- Stock Ticker Mapping: ABCSupply=ABC, Beacon=QXO, SRSProducts=SRS, CommercialDistributors=CDH, Other=OTH
+
+**Key Features:**
+
+1. **Main Dashboard:**
+   - Stock market-style material listings with real-time pricing
+   - Interactive line graphs with hover tooltips showing date/time
+   - Scrolling ticker at top showing all materials with color-coded price changes
+   - Last 5 recent price changes section (highlighted in bright colors)
+   - Customizable default dashboard per user
+   - Additional creative data visualizations and metrics
+
+2. **Price Change Workflow:**
+   - Bottom section: Simple request form (Material Name, Distributor, Updated Price) with autocomplete
+   - Standard user submissions → Slack channel/bot for manager approval
+   - Top-right "Price Change" button → Admin-only immediate update form
+   - All changes logged with timestamp and user tracking
+
+3. **Design Requirements:**
+   - Dark mode interface
+   - Aurora color scheme with vibrant, bright colors
+   - additional color palette options and ideas: #d76184, #f5453b, #3dba99, #37b3d4, #8e37e9, #fdf573, #3fbfe1, #d930ce
+   - Modern, futuristic, tech-forward aesthetic
+   - Traditional stock market color conventions (red/green for price changes, special bright color for recent changes)
+
+4. **Technical Specifications:**
+   - Robust price change tracking and audit logging
+   - Real-time data updates
+   - Responsive design
+   - Integration with Slack API for notifications
+   - Comprehensive error handling and validation
+
+**Deliverables Required:**
+- Complete application source code
+- Detailed README.md with setup instructions
+- .env.example file with all required API keys, secrets, and configuration variables
+- Database migration scripts
+- Deployment instructions
+
+**Additional Creative Elements:**
+Include innovative dashboard features that enhance user experience while maintaining the stock market theme. Consider advanced analytics, trend predictions, price alerts, or other relevant business intelligence features.
+
+Provide a comprehensive technical implementation plan including technology stack recommendations, architecture decisions, development timeline, and detailed code structure for this material pricing management system.
