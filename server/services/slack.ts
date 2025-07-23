@@ -51,6 +51,7 @@ export async function sendPriceChangeRequestNotification(request: {
     : `$${request.requestedPrice}`;
 
   return await sendSlackMessage({
+    channel: process.env.SLACK_CHANNEL_ID || '',
     blocks: [
       {
         type: 'header',
@@ -124,6 +125,7 @@ export async function sendPriceChangeApprovalNotification(details: {
     : `$${details.newPrice}`;
 
   return await sendSlackMessage({
+    channel: process.env.SLACK_CHANNEL_ID || '',
     blocks: [
       {
         type: 'header',
@@ -173,6 +175,7 @@ export async function sendAdminPriceUpdateNotification(details: {
     : `$${details.newPrice}`;
 
   return await sendSlackMessage({
+    channel: process.env.SLACK_CHANNEL_ID || '',
     blocks: [
       {
         type: 'header',

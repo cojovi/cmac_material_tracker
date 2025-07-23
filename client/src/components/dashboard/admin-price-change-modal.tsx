@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -70,7 +70,7 @@ export function AdminPriceChangeModal() {
   };
 
   // Global click handler to open modal
-  useState(() => {
+  useEffect(() => {
     const handleGlobalClick = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target?.closest('[data-event="click:openPriceChangeModal"]')) {
@@ -91,7 +91,7 @@ export function AdminPriceChangeModal() {
   }, [isAdmin, toast]);
 
   // Handle modal state via DOM manipulation for compatibility with existing code
-  useState(() => {
+  useEffect(() => {
     const modal = document.getElementById('admin-price-change-modal');
     if (modal) {
       if (isOpen) {

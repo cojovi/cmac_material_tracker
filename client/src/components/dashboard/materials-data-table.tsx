@@ -140,7 +140,7 @@ export function MaterialsDataTable() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right text-gray-400 text-xs">
-                        {formatTimeAgo(material.lastUpdated)}
+                        {formatTimeAgo(material.lastUpdated.toString())}
                       </TableCell>
                     </TableRow>
                   ))

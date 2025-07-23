@@ -82,7 +82,7 @@ export const DISTRIBUTORS = {
   "Other": "OTH"
 } as const;
 
-export const DISTRIBUTOR_NAMES = Object.keys(DISTRIBUTORS) as (keyof typeof DISTRIBUTORS)[];
+export const DISTRIBUTOR_NAMES = Object.keys(DISTRIBUTORS) as [keyof typeof DISTRIBUTORS, ...(keyof typeof DISTRIBUTORS)[]];
 
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({

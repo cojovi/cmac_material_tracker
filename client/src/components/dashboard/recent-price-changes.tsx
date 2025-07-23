@@ -67,7 +67,7 @@ export function RecentPriceChanges() {
               </div>
             ) : (
               recentChanges.map((change) => {
-                const style = getChangeStyle(change.changePercent);
+                const style = getChangeStyle(change.changePercent || undefined);
                 return (
                   <div
                     key={change.id}
@@ -83,7 +83,7 @@ export function RecentPriceChanges() {
                         {style.badge}
                       </Badge>
                       <span className="text-xs text-gray-400">
-                        {formatTimeAgo(change.submittedAt)}
+                        {formatTimeAgo(change.submittedAt.toString())}
                       </span>
                     </div>
                     <div className="font-medium text-white">

@@ -121,7 +121,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMaterial(material: InsertMaterial, userId: number): Promise<Material> {
-    const tickerSymbol = DISTRIBUTORS[material.distributor];
+    const tickerSymbol = DISTRIBUTORS[material.distributor as keyof typeof DISTRIBUTORS];
     const result = await db.insert(materials).values({
       ...material,
       tickerSymbol,
@@ -141,7 +141,7 @@ export class DatabaseStorage implements IStorage {
     
     // Update ticker symbol if distributor changed
     if (materialData.distributor) {
-      updates.tickerSymbol = DISTRIBUTORS[materialData.distributor];
+      updates.tickerSymbol = DISTRIBUTORS[materialData.distributor as keyof typeof DISTRIBUTORS];
     }
 
     // If price is being updated, store previous price
@@ -243,7 +243,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: User })[]> {
-    let query = db
+    const baseQuery = db
       .select({
         id: priceChangeRequests.id,
         materialName: priceChangeRequests.materialName,
@@ -263,10 +263,14 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(priceChangeRequests.submittedBy, users.id));
 
     if (status) {
-      query = query.where(eq(priceChangeRequests.status, status));
+      const results = await baseQuery
+        .where(eq(priceChangeRequests.status, status))
+        .orderBy(desc(priceChangeRequests.submittedAt));
+      return results;
     }
 
-    return await query.orderBy(desc(priceChangeRequests.submittedAt));
+    const results = await baseQuery.orderBy(desc(priceChangeRequests.submittedAt));
+    return results;
   }
 
   async updatePriceChangeRequest(id: number, updates: Partial<PriceChangeRequest>): Promise<PriceChangeRequest> {
