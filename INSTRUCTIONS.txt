@@ -1,0 +1,327 @@
+MATERIALTRACKER SETUP INSTRUCTIONS
+==================================
+
+Welcome to MaterialTracker! This document provides step-by-step instructions for setting up and running your material pricing dashboard.
+
+QUICK START CHECKLIST
+=====================
+
+□ Install Node.js 18.0 or higher
+□ Create Supabase account and project  
+□ Clone or download the project files
+□ Install dependencies with npm install
+□ Configure environment variables
+□ Push database schema
+□ Create initial admin user
+□ Start the development server
+□ Configure Slack integration (optional)
+
+DETAILED SETUP INSTRUCTIONS
+===========================
+
+1. SYSTEM REQUIREMENTS
+   -------------------
+   Before starting, ensure your system meets these requirements:
+   
+   ✓ Node.js version 18.0 or higher (check with: node --version)
+   ✓ npm version 8.0 or higher (check with: npm --version)
+   ✓ Modern web browser (Chrome, Firefox, Safari, Edge)
+   ✓ Internet connection for Supabase access
+   ✓ Text editor or IDE for configuration
+
+2. DATABASE SETUP (SUPABASE)
+   -------------------------
+   
+   Step 1: Create Supabase Account
+   • Go to https://supabase.com/dashboard/projects
+   • Click "New Project" 
+   • Choose your organization
+   • Enter project name: "MaterialTracker"
+   • Enter database password (save this securely!)
+   • Select region closest to your location
+   • Click "Create new project"
+   
+   Step 2: Get Database Connection String
+   • Wait for project to finish setting up (2-3 minutes)
+   • Click the "Connect" button in the top toolbar
+   • Navigate to "Connection string" → "Transaction pooler"
+   • Copy the URI string
+   • Replace "[YOUR-PASSWORD]" with your database password
+   • Save this connection string for step 4
+
+3. PROJECT INSTALLATION
+   --------------------
+   
+   Step 1: Download Project Files
+   • Extract the project files to your desired directory
+   • Open terminal/command prompt
+   • Navigate to the project directory: cd path/to/materialtracker
+   
+   Step 2: Install Dependencies
+   • Run: npm install
+   • Wait for installation to complete (may take 2-5 minutes)
+   • Verify installation: npm list (should show no errors)
+
+4. ENVIRONMENT CONFIGURATION
+   -------------------------
+   
+   Step 1: Create Environment File
+   • Copy the example file: cp .env.example .env
+   • Open .env file in your text editor
+   
+   Step 2: Configure Required Variables
+   
+   DATABASE_URL (REQUIRED)
+   • Paste your Supabase connection string from step 2
+   • Example: postgresql://postgres:yourpassword@db.abcdefg.supabase.co:5432/postgres
+   
+   SESSION_SECRET (REQUIRED)
+   • Generate a secure random string
+   • Use online generator or command: openssl rand -base64 32
+   • Paste the generated string
+   
+   PORT (OPTIONAL)
+   • Default is 5000
+   • Change if port 5000 is already in use
+   • Example: PORT=3000
+
+5. DATABASE SCHEMA SETUP
+   ----------------------
+   
+   Step 1: Push Schema to Database
+   • Run: npm run db:push
+   • Wait for completion (should take 10-30 seconds)
+   • You should see "Schema pushed successfully"
+   
+   Step 2: Verify Database Tables
+   • Go to your Supabase dashboard
+   • Click "Table Editor" in the sidebar
+   • You should see tables: users, materials, price_history, price_change_requests
+
+6. FIRST RUN
+   ----------
+   
+   Step 1: Start Development Server
+   • Run: npm run dev
+   • Wait for "serving on port 5000" message
+   • Open browser to: http://localhost:5000
+   
+   Step 2: Create Admin User
+   • The app will redirect to login page
+   • You need to create an admin user manually in Supabase:
+   
+   In Supabase Dashboard:
+   1. Go to "Table Editor" → "users" table
+   2. Click "Insert" → "Insert row"
+   3. Fill in:
+      - email: your-email@company.com
+      - password: [temporarily leave blank]
+      - role: admin
+      - name: Your Full Name
+   4. Click "Save"
+   
+   Then in your application:
+   1. Try to login with your email and any password
+   2. This will create the hashed password entry
+   3. You can now login normally
+
+7. SLACK INTEGRATION (OPTIONAL)
+   -----------------------------
+   
+   Step 1: Create Slack App
+   • Go to https://api.slack.com/apps
+   • Click "Create New App" → "From scratch"
+   • App Name: "MaterialTracker"
+   • Choose your workspace
+   • Click "Create App"
+   
+   Step 2: Configure Bot Permissions
+   • In app settings, go to "OAuth & Permissions"
+   • Scroll to "Scopes" → "Bot Token Scopes"
+   • Add these scopes:
+     - chat:write
+     - chat:write.public
+   
+   Step 3: Install App to Workspace
+   • Click "Install to Workspace" button
+   • Review permissions and click "Allow"
+   • Copy the "Bot User OAuth Token" (starts with xoxb-)
+   
+   Step 4: Get Channel ID
+   • Open Slack desktop/web app
+   • Right-click on your desired notification channel
+   • Select "View channel details"
+   • Copy the Channel ID from the bottom
+   
+   Step 5: Update Environment
+   • Add to your .env file:
+     SLACK_BOT_TOKEN=xoxb-your-token-here
+     SLACK_CHANNEL_ID=C1234567890
+
+8. INITIAL DATA SETUP
+   -------------------
+   
+   Option 1: Manual Entry
+   • Login as admin user
+   • Click "Price Change" button
+   • Add your first materials using the form
+   
+   Option 2: Sample Data (Development)
+   • You can add sample materials to test the system
+   • Use realistic pricing data for your region
+   • Include variety of categories and distributors
+
+9. VERIFICATION & TESTING
+   -----------------------
+   
+   □ Dashboard loads without errors
+   □ Can login with admin account
+   □ Price Change modal opens for admin
+   □ Can submit price change requests as standard user
+   □ Charts display (may be empty initially)
+   □ Recent changes panel shows new entries
+   □ Slack notifications work (if configured)
+   □ Data table search functions properly
+   □ Responsive design works on mobile
+
+10. PRODUCTION DEPLOYMENT
+    ---------------------
+    
+    For production deployment:
+    
+    Step 1: Build Application
+    • Run: npm run build
+    • Verify build completes without errors
+    
+    Step 2: Environment Configuration
+    • Set NODE_ENV=production
+    • Use production database URL
+    • Configure secure session secret
+    • Set up SSL certificates
+    
+    Step 3: Start Production Server
+    • Run: npm start
+    • Verify application starts correctly
+    • Test all functionality in production
+
+TROUBLESHOOTING GUIDE
+====================
+
+Problem: "Database connection failed"
+Solution: 
+• Check DATABASE_URL format
+• Verify Supabase project is active
+• Confirm password is correct
+• Check network connectivity
+
+Problem: "Session secret required"
+Solution:
+• Ensure SESSION_SECRET is set in .env
+• Generate new secret: openssl rand -base64 32
+• Restart the server after updating
+
+Problem: "Cannot find module errors"
+Solution:
+• Delete node_modules folder
+• Run: npm install
+• Clear npm cache: npm cache clean --force
+
+Problem: "Port already in use"
+Solution:
+• Change PORT in .env file
+• Find and kill process using port: lsof -ti:5000 | xargs kill
+
+Problem: "Slack notifications not working"
+Solution:
+• Verify bot token is correct
+• Check bot has permission to post in channel
+• Confirm channel ID is accurate
+• Test bot in Slack directly
+
+Problem: "Charts not displaying"
+Solution:
+• Check browser console for JavaScript errors
+• Ensure data exists in database
+• Verify chart libraries loaded correctly
+• Clear browser cache
+
+MAINTENANCE TASKS
+================
+
+Daily:
+• Monitor error logs
+• Check database performance
+• Verify backup completion
+• Review user activity
+
+Weekly:
+• Update material prices
+• Clean old session data
+• Review price change requests
+• Update user accounts
+
+Monthly:
+• Database maintenance (VACUUM)
+• Update dependencies: npm update
+• Review and archive old data
+• Performance optimization
+
+SUPPORT & CONTACT
+================
+
+For technical support:
+• Check this documentation first
+• Review error messages in browser console
+• Check server logs for detailed errors
+• Contact system administrator
+
+For feature requests:
+• Document the business need
+• Provide specific requirements
+• Include mockups if possible
+• Submit through proper channels
+
+For urgent issues:
+• Contact system administrator immediately
+• Provide error screenshots
+• Include steps to reproduce issue
+• Note time and user affected
+
+SECURITY BEST PRACTICES
+=======================
+
+• Use strong passwords for all accounts
+• Regularly update session secrets
+• Monitor user access logs
+• Keep software dependencies updated
+• Use HTTPS in production
+• Regular database backups
+• Limit admin user access
+• Regular security audits
+
+DATA BACKUP STRATEGY
+===================
+
+• Automated daily database backups
+• Weekly full system backups
+• Monthly archive to long-term storage
+• Test restore procedures quarterly
+• Document recovery procedures
+• Multiple backup locations
+• Encrypt sensitive backup data
+
+USER TRAINING CHECKLIST
+=======================
+
+□ Dashboard navigation
+□ Material search functionality
+□ Price change request process
+□ Admin price update procedures
+□ Report generation and export
+□ Mobile/tablet usage
+□ Slack notification settings
+□ Data interpretation and analysis
+
+Remember: This system handles critical business data. Always test changes in a development environment before applying to production!
+
+For additional help, refer to the README.md file or contact your system administrator.

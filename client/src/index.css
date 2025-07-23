@@ -1,0 +1,236 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Aurora Dreams Color Palette */
+  --aurora-navy: hsl(252, 60%, 11%);
+  --aurora-purple: hsl(259, 61%, 25%);
+  --aurora-violet: hsl(280, 60%, 42%);
+  --aurora-cyan: hsl(162, 100%, 64%);
+  --aurora-teal: hsl(181, 75%, 60%);
+  --aurora-blue: hsl(199, 61%, 45%);
+  --aurora-coral: hsl(342, 58%, 58%);
+  --aurora-red: hsl(8, 89%, 60%);
+  --aurora-green: hsl(162, 51%, 48%);
+  --aurora-sky: hsl(198, 70%, 52%);
+  --aurora-magenta: hsl(269, 69%, 49%);
+  --aurora-yellow: hsl(57, 96%, 72%);
+  --aurora-bright-cyan: hsl(196, 85%, 61%);
+  --aurora-pink: hsl(310, 75%, 51%);
+  
+  /* Base colors adapted for aurora theme */
+  --background: hsl(252, 60%, 8%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(252, 40%, 15%);
+  --muted-foreground: hsl(252, 20%, 65%);
+  --popover: hsl(252, 50%, 12%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(252, 40%, 10%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(259, 40%, 20%);
+  --input: hsl(259, 40%, 18%);
+  --primary: hsl(162, 100%, 64%);
+  --primary-foreground: hsl(252, 60%, 11%);
+  --secondary: hsl(259, 40%, 18%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(280, 60%, 42%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(8, 89%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(162, 100%, 64%);
+  --radius: 0.75rem;
+  
+  /* Chart colors */
+  --chart-1: hsl(162, 100%, 64%);
+  --chart-2: hsl(181, 75%, 60%);
+  --chart-3: hsl(199, 61%, 45%);
+  --chart-4: hsl(280, 60%, 42%);
+  --chart-5: hsl(269, 69%, 49%);
+}
+
+.dark {
+  /* Dark mode uses the same aurora palette */
+  --background: hsl(252, 60%, 8%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(252, 40%, 15%);
+  --muted-foreground: hsl(252, 20%, 65%);
+  --popover: hsl(252, 50%, 12%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(252, 40%, 10%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(259, 40%, 20%);
+  --input: hsl(259, 40%, 18%);
+  --primary: hsl(162, 100%, 64%);
+  --primary-foreground: hsl(252, 60%, 11%);
+  --secondary: hsl(259, 40%, 18%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(280, 60%, 42%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(8, 89%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(162, 100%, 64%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background: linear-gradient(135deg, var(--aurora-navy) 0%, var(--aurora-purple) 50%, var(--aurora-violet) 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  /* Aurora color utilities */
+  .text-aurora-navy { color: var(--aurora-navy); }
+  .text-aurora-purple { color: var(--aurora-purple); }
+  .text-aurora-violet { color: var(--aurora-violet); }
+  .text-aurora-cyan { color: var(--aurora-cyan); }
+  .text-aurora-teal { color: var(--aurora-teal); }
+  .text-aurora-blue { color: var(--aurora-blue); }
+  .text-aurora-coral { color: var(--aurora-coral); }
+  .text-aurora-red { color: var(--aurora-red); }
+  .text-aurora-green { color: var(--aurora-green); }
+  .text-aurora-sky { color: var(--aurora-sky); }
+  .text-aurora-magenta { color: var(--aurora-magenta); }
+  .text-aurora-yellow { color: var(--aurora-yellow); }
+  .text-aurora-bright-cyan { color: var(--aurora-bright-cyan); }
+  .text-aurora-pink { color: var(--aurora-pink); }
+
+  .bg-aurora-navy { background-color: var(--aurora-navy); }
+  .bg-aurora-purple { background-color: var(--aurora-purple); }
+  .bg-aurora-violet { background-color: var(--aurora-violet); }
+  .bg-aurora-cyan { background-color: var(--aurora-cyan); }
+  .bg-aurora-teal { background-color: var(--aurora-teal); }
+  .bg-aurora-blue { background-color: var(--aurora-blue); }
+  .bg-aurora-coral { background-color: var(--aurora-coral); }
+  .bg-aurora-red { background-color: var(--aurora-red); }
+  .bg-aurora-green { background-color: var(--aurora-green); }
+  .bg-aurora-sky { background-color: var(--aurora-sky); }
+  .bg-aurora-magenta { background-color: var(--aurora-magenta); }
+  .bg-aurora-yellow { background-color: var(--aurora-yellow); }
+  .bg-aurora-bright-cyan { background-color: var(--aurora-bright-cyan); }
+  .bg-aurora-pink { background-color: var(--aurora-pink); }
+
+  .border-aurora-cyan { border-color: var(--aurora-cyan); }
+  .border-aurora-purple { border-color: var(--aurora-purple); }
+  .border-aurora-violet { border-color: var(--aurora-violet); }
+  .border-aurora-teal { border-color: var(--aurora-teal); }
+  .border-aurora-blue { border-color: var(--aurora-blue); }
+  .border-aurora-green { border-color: var(--aurora-green); }
+  .border-aurora-red { border-color: var(--aurora-red); }
+  .border-aurora-yellow { border-color: var(--aurora-yellow); }
+
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Ticker animation */
+  .ticker-container {
+    overflow: hidden;
+    white-space: nowrap;
+    background: linear-gradient(90deg, 
+      rgba(27, 22, 65, 0.9) 0%, 
+      rgba(60, 36, 156, 0.9) 50%, 
+      rgba(131, 42, 208, 0.9) 100%
+    );
+  }
+
+  .animate-ticker {
+    animation: ticker 60s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% { transform: translate3d(100%, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+  }
+
+  /* Glow effect for recent changes */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from { 
+      box-shadow: 0 0 5px var(--aurora-cyan), 
+                  0 0 10px var(--aurora-cyan), 
+                  0 0 15px var(--aurora-cyan); 
+    }
+    to { 
+      box-shadow: 0 0 10px var(--aurora-cyan), 
+                  0 0 20px var(--aurora-cyan), 
+                  0 0 30px var(--aurora-cyan); 
+    }
+  }
+
+  /* Pulse animation for live indicators */
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* TV optimized styles */
+  @media (min-width: 1920px) {
+    .tv-optimized {
+      font-size: 1.25rem;
+    }
+    .tv-optimized .text-sm {
+      font-size: 1rem;
+    }
+    .tv-optimized .text-lg {
+      font-size: 1.5rem;
+    }
+    .tv-optimized .text-xl {
+      font-size: 2rem;
+    }
+    .tv-optimized .text-2xl {
+      font-size: 2.5rem;
+    }
+  }
+
+  /* Chart container styling */
+  .chart-container {
+    position: relative;
+    height: 300px;
+  }
+
+  /* Hover effects for interactive elements */
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(71, 255, 191, 0.3);
+    transition: box-shadow 0.3s ease;
+  }
+
+  /* Material card styling */
+  .material-card {
+    transition: all 0.3s ease;
+  }
+
+  .material-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--aurora-navy);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--aurora-purple);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--aurora-cyan);
+  }
+}
