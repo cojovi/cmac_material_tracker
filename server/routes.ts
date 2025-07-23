@@ -430,6 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             productCategory: record.productCategory?.trim(),
             distributor: record.distributor?.trim(),
             currentPrice: record.currentPrice?.toString().trim(),
+            tickerSymbol: record.tickerSymbol?.trim(),
           };
 
           // Validate using Zod schema
