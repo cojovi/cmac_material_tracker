@@ -17,6 +17,12 @@ import {
 } from "./services/slack";
 import { z } from "zod";
 
+// Helper function to calculate percentage change
+function calculatePercentageChange(oldPrice: number, newPrice: number): number {
+  if (oldPrice === 0) return 0;
+  return ((newPrice - oldPrice) / oldPrice) * 100;
+}
+
 declare global {
   namespace Express {
     interface User {
@@ -466,6 +472,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching price history:', error);
       res.status(500).json({ message: 'Failed to fetch price history' });
+    }
+  });
+
+  // Bulk price history upload endpoint
+  app.post("/api/price-history/bulk-upload", requireAdmin, upload.single('csv'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No CSV file provided" });
+      }
+
+      const csvContent = req.file.buffer.toString('utf-8');
+      
+      // Parse CSV
+      let records;
+      try {
+        records = parse(csvContent, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true,
+        });
+      } catch (parseError) {
+        return res.status(400).json({ error: "Invalid CSV format" });
+      }
+
+      const results = {
+        success: 0,
+        errors: [] as { row: number; error: string }[],
+        total: records.length,
+      };
+
+      // Process each record
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i] as any;
+        const rowNumber = i + 2; // +2 because CSV has header row and arrays are 0-indexed
+
+        try {
+          // Find the material by name, distributor, and location
+          const material = await storage.findMaterialByDetails(
+            record.materialName?.trim(),
+            record.distributor?.trim(),
+            record.location?.trim()
+          );
+
+          if (!material) {
+            results.errors.push({
+              row: rowNumber,
+              error: `Material not found: ${record.materialName} - ${record.distributor} - ${record.location}`,
+            });
+            continue;
+          }
+
+          // Create price history record
+          const priceHistoryData = {
+            materialId: material.id,
+            oldPrice: record.oldPrice?.toString().trim(),
+            newPrice: record.newPrice?.toString().trim(),
+            changePercent: calculatePercentageChange(
+              parseFloat(record.oldPrice),
+              parseFloat(record.newPrice)
+            ).toString(),
+            submittedAt: new Date(record.changeDate),
+            status: 'approved' as const,
+            reviewedAt: new Date(record.changeDate),
+            reviewedBy: req.user!.id,
+            notes: record.changeReason?.trim() || 'Historical data import',
+          };
+
+          await storage.createPriceHistory(priceHistoryData);
+          results.success++;
+          
+        } catch (error) {
+          let errorMessage = "Unknown error";
+          
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          
+          results.errors.push({
+            row: rowNumber,
+            error: errorMessage,
+          });
+        }
+      }
+
+      res.json(results);
+      
+    } catch (error) {
+      console.error("Price history upload error:", error);
+      res.status(500).json({ error: "Internal server error during price history upload" });
     }
   });
 

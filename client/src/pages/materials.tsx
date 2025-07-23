@@ -6,6 +6,7 @@ import { SidebarNavigation } from "@/components/dashboard/sidebar-navigation";
 import { MaterialsDataTable } from "@/components/dashboard/materials-data-table";
 import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
 import { CSVUploadModal } from "@/components/dashboard/csv-upload-modal";
+import { BulkDataImportModal } from "@/components/dashboard/bulk-data-import-modal";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ export default function Materials() {
   const { user, isLoading, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [showCSVUpload, setShowCSVUpload] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   if (isLoading) {
     return (
@@ -47,11 +49,18 @@ export default function Materials() {
                 {isAdmin && (
                   <div className="flex gap-3">
                     <Button
+                      onClick={() => setShowBulkImport(true)}
+                      className="bg-aurora-green hover:bg-aurora-green/80 text-white border-0"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Initial Setup Import
+                    </Button>
+                    <Button
                       onClick={() => setShowCSVUpload(true)}
                       className="bg-aurora-purple hover:bg-aurora-purple/80 text-white border-0"
                     >
                       <Upload className="mr-2 h-4 w-4" />
-                      Bulk Import CSV
+                      Quick CSV Upload
                     </Button>
                     <Button
                       data-event="click:openPriceChangeModal"
@@ -80,6 +89,12 @@ export default function Materials() {
         <CSVUploadModal 
           isOpen={showCSVUpload}
           onClose={() => setShowCSVUpload(false)}
+        />
+      )}
+      {showBulkImport && (
+        <BulkDataImportModal
+          isOpen={showBulkImport}
+          onClose={() => setShowBulkImport(false)}
         />
       )}
     </div>

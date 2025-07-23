@@ -1,0 +1,42 @@
+name,location,manufacturer,productCategory,distributor,currentPrice,tickerSymbol
+Atlas Lifetime Pro 30-Year Architectural Shingle Charcoal,DFW,Atlas,Shingle,ABCSupply,125.50,ATLS-001
+GAF Timberline HD Charcoal,DFW,GAF,Shingle,Beacon,118.75,GAF-THD
+Malarky Windsor Storm 30-Year,DFW,Malarky,Shingle,SRSProducts,132.25,MLK-WS30
+Owens Corning Duration Storm 30-Year Driftwood,DFW,Owens Corning,Shingle,ABCSupply,128.90,OC-DS30
+IKO Cambridge Dual Black,DFW,IKO,Shingle,Beacon,115.00,IKO-CDB
+GAF Tiger Paw Synthetic Underlayment,DFW,GAF,Underlayment,ABCSupply,89.99,GAF-TPSU
+Atlas Pro-Cut Hip & Ridge Shingles,DFW,Atlas,Accessory,SRSProducts,67.50,ATLS-PCH
+Malarky Legacy Slate 50-Year Warranty,ATX,Malarky,Shingle,Beacon,145.75,MLK-LS50
+GAF Timberline UHD Weathered Wood,ATX,GAF,Shingle,ABCSupply,122.00,GAF-TUHD
+Owens Corning TruDefinition Duration Estate Gray,ATX,Owens Corning,Shingle,SRSProducts,135.25,OC-TDEG
+Atlas StormMaster Slate 30-Year,ATX,Atlas,Shingle,Beacon,139.50,ATLS-SMS30
+IKO Marathon 25-Year Brownstone,ATX,IKO,Shingle,ABCSupply,108.75,IKO-M25B
+Other Ice & Water Shield 36in,ATX,Other,Underlayment,SRSProducts,95.00,OTH-IWS36
+Atlas Pro-Cut Hip & Ridge Weathered Wood,ATX,Atlas,Accessory,Beacon,69.25,ATLS-PCHW
+GAF Cobra Ridge Vent 12ft,ATX,GAF,Ventilation,ABCSupply,45.50,GAF-CRV12
+Malarky Windsor Storm Estate Gray,HOU,Malarky,Shingle,SRSProducts,134.00,MLK-WSEG
+GAF Timberline AS Weathered Wood,HOU,GAF,Shingle,Beacon,116.25,GAF-TASWW
+Owens Corning Duration Onyx Black,HOU,Owens Corning,Shingle,ABCSupply,131.75,OC-DOB
+Atlas Pinnacle Pristine Hunter Green,HOU,Atlas,Shingle,SRSProducts,142.50
+IKO Nordic 30-Year Glacier,HOU,IKO,Shingle,Beacon,119.00
+GAF FeltBuster Synthetic Underlayment,HOU,GAF,Underlayment,ABCSupply,78.50
+Atlas StormMaster Shake 30-Year Rustic Brown,HOU,Atlas,Shingle,SRSProducts,138.25
+GAF Master Flow Power Vent,HOU,GAF,Ventilation,Beacon,125.00
+Owens Corning VentSure InFlow Intake Vent,HOU,OwensCorning,Ventilation,ABCSupply,35.75
+Malarky Legacy Slate Antique Brown,OKC,Malarky,Shingle,Beacon,147.25
+GAF Timberline HD Biscayne Blue,OKC,GAF,Shingle,SRSProducts,119.50
+Atlas StormMaster Slate Weathered Wood,OKC,Atlas,Shingle,ABCSupply,141.00
+IKO Cambridge Dual Grey,OKC,IKO,Shingle,Beacon,117.75
+Owens Corning Duration Designer Sedona Canyon,OKC,OwensCorning,Shingle,SRSProducts,149.00
+GAF WeatherWatch Granular Surface,OKC,GAF,Underlayment,ABCSupply,88.25
+Atlas Pro-Cut Hip & Ridge Aged Cedar,OKC,Atlas,Accessory,Beacon,71.50
+GAF Cobra Snow Country Advanced,OKC,GAF,Ventilation,SRSProducts,52.75
+Malarky Windsor Storm Antique Brown,ATL,Malarky,Shingle,ABCSupply,135.75
+GAF Timberline UHD Mission Brown,ATL,GAF,Shingle,Beacon,124.50
+Owens Corning TruDefinition Duration Amber,ATL,OwensCorning,Shingle,SRSProducts,137.25
+Atlas Pinnacle Pristine Weathered Wood,ATL,Atlas,Shingle,ABCSupply,144.00
+IKO Marathon 30-Year Driftshake,ATL,IKO,Shingle,Beacon,121.25
+GAF Liberty SBS Modified Base Sheet,ATL,GAF,Underlayment,SRSProducts,92.50
+Atlas StormMaster Shake Oxford Grey,ATL,Atlas,Shingle,ABCSupply,140.75
+GAF Master Flow Foundation Vent,ATL,GAF,Ventilation,Beacon,28.50
+Owens Corning VentSure Edge Vent,ATL,OwensCorning,Ventilation,SRSProducts,42.25
