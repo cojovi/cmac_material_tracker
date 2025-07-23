@@ -71,7 +71,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
+                className="bg-white/90 border-aurora-purple/30 text-black placeholder-gray-500 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
                 placeholder="Enter your email"
                 {...form.register("email")}
               />
@@ -85,7 +85,7 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
+                className="bg-white/90 border-aurora-purple/30 text-black placeholder-gray-500 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
                 placeholder="Enter your password"
                 {...form.register("password")}
               />
