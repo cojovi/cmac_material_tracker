@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
 import { storage } from "./storage";
 import { 
   insertMaterialSchema, insertPriceChangeRequestSchema, loginSchema,
@@ -13,6 +15,7 @@ import {
   sendPriceChangeApprovalNotification,
   sendAdminPriceUpdateNotification 
 } from "./services/slack";
+import { z } from "zod";
 
 declare global {
   namespace Express {
@@ -71,6 +74,9 @@ const requireAdmin = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Multer configuration for file uploads
+  const upload = multer({ storage: multer.memoryStorage() });
+
   // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -374,6 +380,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error rejecting price change request:', error);
       res.status(500).json({ message: 'Failed to reject price change request' });
+    }
+  });
+
+  // CSV Upload route
+  app.post("/api/materials/bulk-upload", requireAdmin, upload.single('csv'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No CSV file provided" });
+      }
+
+      const csvContent = req.file.buffer.toString('utf-8');
+      
+      // Parse CSV
+      let records;
+      try {
+        records = parse(csvContent, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true,
+        });
+      } catch (parseError) {
+        return res.status(400).json({ error: "Invalid CSV format" });
+      }
+
+      const results = {
+        success: 0,
+        errors: [] as { row: number; error: string }[],
+        total: records.length,
+      };
+
+      // Process each record
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i] as any;
+        const rowNumber = i + 2; // +2 because CSV has header row and arrays are 0-indexed
+
+        try {
+          // Validate required fields
+          const materialData = {
+            name: record.name?.trim(),
+            location: record.location?.trim(),
+            manufacturer: record.manufacturer?.trim(),
+            productCategory: record.productCategory?.trim(),
+            distributor: record.distributor?.trim(),
+            currentPrice: record.currentPrice?.toString().trim(),
+          };
+
+          // Validate using Zod schema
+          const validatedData = insertMaterialSchema.parse(materialData);
+          
+          // Create material
+          await storage.createMaterial(validatedData, req.user!.id);
+          results.success++;
+          
+        } catch (error) {
+          let errorMessage = "Unknown error";
+          
+          if (error instanceof z.ZodError) {
+            errorMessage = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          
+          results.errors.push({
+            row: rowNumber,
+            error: errorMessage,
+          });
+        }
+      }
+
+      res.json(results);
+      
+    } catch (error) {
+      console.error("CSV upload error:", error);
+      res.status(500).json({ error: "Internal server error during CSV upload" });
+    }
+  });
+
+  // Price history endpoint for the new page
+  app.get('/api/price-history/all', requireAuth, async (req, res) => {
+    try {
+      // Get all price history with material details
+      const allHistory = await storage.getRecentPriceChanges(100); // Get more records
+      res.json(allHistory);
+    } catch (error) {
+      console.error('Error fetching price history:', error);
+      res.status(500).json({ message: 'Failed to fetch price history' });
     }
   });
 

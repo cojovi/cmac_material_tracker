@@ -1,9 +1,11 @@
 import { ChartArea, Box, History, TrendingUp, Package, Layers, Building2, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation, Link } from "wouter";
 import { type MaterialWithHistory } from "@shared/schema";
 
 export function SidebarNavigation() {
+  const [location] = useLocation();
   const { data: materials = [] } = useQuery<MaterialWithHistory[]>({
     queryKey: ["/api/materials"],
   });
@@ -18,23 +20,26 @@ export function SidebarNavigation() {
     { 
       icon: ChartArea, 
       label: "Dashboard", 
-      active: true,
-      href: "#"
+      href: "/",
+      active: location === "/"
     },
     { 
       icon: Box, 
       label: "Materials", 
-      href: "#"
+      href: "/materials",
+      active: location === "/materials"
     },
     { 
       icon: History, 
       label: "Price History", 
-      href: "#"
+      href: "/price-history",
+      active: location === "/price-history"
     },
     { 
       icon: TrendingUp, 
       label: "Analytics", 
-      href: "#"
+      href: "/analytics",
+      active: location === "/analytics"
     },
   ];
 
@@ -57,7 +62,7 @@ export function SidebarNavigation() {
         </div>
         
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.label}
             href={item.href}
             className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
@@ -68,7 +73,7 @@ export function SidebarNavigation() {
           >
             <item.icon className="mr-3 h-4 w-4" />
             {item.label}
-          </a>
+          </Link>
         ))}
         
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 mt-8">

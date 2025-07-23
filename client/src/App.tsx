@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import Dashboard from "@/pages/dashboard";
+import Materials from "@/pages/materials";
+import PriceHistory from "@/pages/price-history";
+import Analytics from "@/pages/analytics";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -12,6 +15,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/materials" component={Materials} />
+      <Route path="/price-history" component={PriceHistory} />
+      <Route path="/analytics" component={Analytics} />
       <Route path="/login" component={Login} />
       <Route component={NotFound} />
     </Switch>
