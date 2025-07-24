@@ -69,7 +69,7 @@ export function AdminPriceChangeModal() {
     createMaterialMutation.mutate(data);
   };
 
-  // Global click handler to open modal
+  // Global handlers to open modal
   useEffect(() => {
     const handleGlobalClick = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -86,8 +86,25 @@ export function AdminPriceChangeModal() {
       }
     };
 
+    const handleCustomEvent = () => {
+      if (isAdmin) {
+        setIsOpen(true);
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "Admin access required for direct price changes.",
+          variant: "destructive",
+        });
+      }
+    };
+
     document.addEventListener('click', handleGlobalClick);
-    return () => document.removeEventListener('click', handleGlobalClick);
+    document.addEventListener('openAdminPriceModal', handleCustomEvent);
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+      document.removeEventListener('openAdminPriceModal', handleCustomEvent);
+    };
   }, [isAdmin, toast]);
 
 

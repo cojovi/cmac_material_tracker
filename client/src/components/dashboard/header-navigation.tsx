@@ -19,11 +19,9 @@ export function HeaderNavigation() {
   });
 
   const openPriceChangeModal = () => {
-    const modal = document.getElementById('admin-price-change-modal');
-    if (modal) {
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
+    // Trigger the modal open via data attribute click
+    const event = new CustomEvent('openAdminPriceModal');
+    document.dispatchEvent(event);
   };
 
   return (
