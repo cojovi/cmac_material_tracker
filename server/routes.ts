@@ -521,8 +521,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bulk price history upload endpoint
-  app.post("/api/price-history/bulk-upload", requireAdmin, upload.single('csv'), async (req, res) => {
+  // Price history upload endpoint  
+  app.post("/api/price-history/upload", requireAdmin, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No CSV file provided" });
@@ -570,21 +570,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Create price history record
-          const priceHistoryData = {
-            materialId: material.id,
-            oldPrice: record.oldPrice?.toString().trim(),
-            newPrice: record.newPrice?.toString().trim(),
-            changePercent: calculatePercentageChange(
-              parseFloat(record.oldPrice),
-              parseFloat(record.newPrice)
-            ).toString(),
-            submittedAt: new Date(record.changeDate),
-            status: 'approved' as const,
-            reviewedAt: new Date(record.changeDate),
-            reviewedBy: req.user!.id,
-            notes: record.changeReason?.trim() || 'Historical data import',
-          };
-
           await storage.addPriceHistory({
             materialId: material.id,
             oldPrice: record.oldPrice?.toString().trim(),

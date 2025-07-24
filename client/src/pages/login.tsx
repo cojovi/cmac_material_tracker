@@ -42,6 +42,7 @@ export default function Login() {
   });
 
   const onSubmit = (data: LoginCredentials) => {
+    if (loginMutation.isPending) return; // Prevent double submission
     setError("");
     loginMutation.mutate(data);
   };

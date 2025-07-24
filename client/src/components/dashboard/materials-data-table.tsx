@@ -56,7 +56,7 @@ export function MaterialsDataTable() {
     const colors = {
       "ABC": "bg-aurora-cyan/20 text-aurora-cyan",
       "QXO": "bg-aurora-teal/20 text-aurora-teal",
-      "SRS": "bg-aurora-purple/20 text-aurora-purple",
+      "SRS": "bg-aurora-pink/20 text-aurora-pink",
       "CDH": "bg-aurora-blue/20 text-aurora-blue",
       "OTH": "bg-aurora-magenta/20 text-aurora-magenta"
     };
