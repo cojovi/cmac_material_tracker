@@ -99,12 +99,12 @@ export function MaterialsDataTable() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-aurora-purple/30 hover:bg-transparent">
-                  <TableHead className="text-gray-300 font-semibold">Material</TableHead>
-                  <TableHead className="text-gray-300 font-semibold">Distributor</TableHead>
-                  <TableHead className="text-gray-300 font-semibold">Location</TableHead>
-                  <TableHead className="text-gray-300 font-semibold text-right">Price</TableHead>
-                  <TableHead className="text-gray-300 font-semibold text-right">Change</TableHead>
-                  <TableHead className="text-gray-300 font-semibold text-right">Updated</TableHead>
+                  <TableHead className="text-white font-semibold w-1/3">Material</TableHead>
+                  <TableHead className="text-white font-semibold w-20">Distributor</TableHead>
+                  <TableHead className="text-white font-semibold w-20">Location</TableHead>
+                  <TableHead className="text-white font-semibold text-right w-24">Price</TableHead>
+                  <TableHead className="text-white font-semibold text-right w-20">Change</TableHead>
+                  <TableHead className="text-white font-semibold text-right w-20">Updated</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,35 +116,35 @@ export function MaterialsDataTable() {
                   </TableRow>
                 ) : (
                   filteredMaterials.map((material) => (
-                    <Link key={material.id} href={`/material/${material.id}`}>
-                      <TableRow
-                        className="border-b border-aurora-navy/20 hover:bg-aurora-purple/10 transition-colors cursor-pointer material-card"
-                      >
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-white">{material.name}</div>
-                            <div className="text-xs text-gray-400">{material.productCategory}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={`${getTickerColor(material.tickerSymbol)} font-medium border-0`}>
-                            {material.tickerSymbol}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-300">{material.location}</TableCell>
-                        <TableCell className="text-right font-semibold text-white">
-                          ${parseFloat(material.currentPrice).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={`font-semibold ${getChangeColor(material.changeDirection)}`}>
-                            {formatChange(material.changePercent, material.changeDirection)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right text-gray-400 text-xs">
-                          {formatTimeAgo(material.lastUpdated.toString())}
-                        </TableCell>
-                      </TableRow>
-                    </Link>
+                    <TableRow
+                      key={material.id}
+                      className="border-b border-aurora-navy/20 hover:bg-aurora-purple/10 transition-colors cursor-pointer material-card"
+                      onClick={() => window.location.href = `/material/${material.id}`}
+                    >
+                      <TableCell className="w-1/3">
+                        <div>
+                          <div className="font-medium text-white">{material.name}</div>
+                          <div className="text-xs text-aurora-cyan/70">{material.productCategory}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="w-20">
+                        <Badge className={`${getTickerColor(material.tickerSymbol)} font-medium border-0`}>
+                          {material.tickerSymbol}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-white font-medium w-20">{material.location}</TableCell>
+                      <TableCell className="text-right font-semibold text-white w-24">
+                        ${parseFloat(material.currentPrice).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right w-20">
+                        <span className={`font-semibold ${getChangeColor(material.changeDirection)}`}>
+                          {formatChange(material.changePercent, material.changeDirection)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-aurora-cyan/80 text-xs w-20">
+                        {formatTimeAgo(material.lastUpdated.toString())}
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
               </TableBody>
