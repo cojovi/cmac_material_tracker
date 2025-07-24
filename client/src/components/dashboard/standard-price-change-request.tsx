@@ -58,8 +58,9 @@ export function StandardPriceChangeRequest() {
         body: JSON.stringify({
           materialName: data.materialName,
           distributor: data.distributor,
-          newPrice: data.newPrice,
-          reason: data.reason
+          requestedPrice: data.newPrice,
+          currentPrice: selectedMaterial?.currentPrice || 0,
+          notes: data.reason
         })
       });
       
