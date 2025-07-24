@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -115,34 +116,35 @@ export function MaterialsDataTable() {
                   </TableRow>
                 ) : (
                   filteredMaterials.map((material) => (
-                    <TableRow
-                      key={material.id}
-                      className="border-b border-aurora-navy/20 hover:bg-aurora-purple/5 transition-colors"
-                    >
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-white">{material.name}</div>
-                          <div className="text-xs text-gray-400">{material.productCategory}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`${getTickerColor(material.tickerSymbol)} font-medium border-0`}>
-                          {material.tickerSymbol}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-300">{material.location}</TableCell>
-                      <TableCell className="text-right font-semibold text-white">
-                        ${parseFloat(material.currentPrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={`font-semibold ${getChangeColor(material.changeDirection)}`}>
-                          {formatChange(material.changePercent, material.changeDirection)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-gray-400 text-xs">
-                        {formatTimeAgo(material.lastUpdated.toString())}
-                      </TableCell>
-                    </TableRow>
+                    <Link key={material.id} href={`/material/${material.id}`}>
+                      <TableRow
+                        className="border-b border-aurora-navy/20 hover:bg-aurora-purple/10 transition-colors cursor-pointer material-card"
+                      >
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-white">{material.name}</div>
+                            <div className="text-xs text-gray-400">{material.productCategory}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${getTickerColor(material.tickerSymbol)} font-medium border-0`}>
+                            {material.tickerSymbol}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-300">{material.location}</TableCell>
+                        <TableCell className="text-right font-semibold text-white">
+                          ${parseFloat(material.currentPrice).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`font-semibold ${getChangeColor(material.changeDirection)}`}>
+                            {formatChange(material.changePercent, material.changeDirection)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-gray-400 text-xs">
+                          {formatTimeAgo(material.lastUpdated.toString())}
+                        </TableCell>
+                      </TableRow>
+                    </Link>
                   ))
                 )}
               </TableBody>

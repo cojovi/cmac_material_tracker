@@ -125,6 +125,32 @@
   .border-aurora-red { border-color: var(--aurora-red); }
   .border-aurora-yellow { border-color: var(--aurora-yellow); }
 
+  /* Fix input field text visibility */
+  input, textarea, select {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  /* Ensure form field text is visible */
+  .form-control, 
+  .form-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="file"],
+  textarea,
+  select {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
+
   /* Glass morphism effect */
   .glass {
     background: rgba(255, 255, 255, 0.05);

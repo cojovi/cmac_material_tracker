@@ -33,7 +33,7 @@ export function HeaderNavigation() {
           <div className="flex items-center space-x-4">
             <div className="text-2xl font-bold text-aurora-cyan flex items-center">
               <ChartLine className="mr-2" />
-              MaterialTracker
+              CMACMaterialTracker
             </div>
             <div className="hidden md:flex items-center space-x-2 text-sm text-gray-300">
               <span>Last Update:</span>

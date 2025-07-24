@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import Dashboard from "@/pages/dashboard";
 import Materials from "@/pages/materials";
+import MaterialDetail from "@/pages/material-detail";
 import PriceHistory from "@/pages/price-history";
 import Analytics from "@/pages/analytics";
 import Login from "@/pages/login";
@@ -16,6 +17,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/materials" component={Materials} />
+      <Route path="/material/:id" component={MaterialDetail} />
       <Route path="/price-history" component={PriceHistory} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/login" component={Login} />

@@ -180,6 +180,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Materials routes
+  // Single material by ID
+  app.get('/api/materials/:id', requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const material = await storage.getMaterialById(id);
+      if (!material) {
+        return res.status(404).json({ message: 'Material not found' });
+      }
+      res.json(material);
+    } catch (error) {
+      console.error('Error fetching material:', error);
+      res.status(500).json({ message: 'Failed to fetch material' });
+    }
+  });
+
   app.get('/api/materials', requireAuth, async (req, res) => {
     try {
       const materials = await storage.getAllMaterials();
@@ -275,6 +290,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Price history routes
+  app.get('/api/price-history/:materialId', requireAuth, async (req, res) => {
+    try {
+      const materialId = parseInt(req.params.materialId);
+      const timeRange = req.query.timeRange as string || '3m';
+      
+      // Convert time range to days
+      let days = 90; // Default 3 months
+      switch (timeRange) {
+        case '7d': days = 7; break;
+        case '1m': days = 30; break;
+        case '3m': days = 90; break;
+        case '1y': days = 365; break;
+      }
+      
+      const history = await storage.getPriceHistory(materialId, days);
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching price history:', error);
+      res.status(500).json({ message: 'Failed to fetch price history' });
+    }
+  });
+
   app.get('/api/materials/:id/history', requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

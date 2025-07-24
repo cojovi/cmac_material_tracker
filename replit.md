@@ -1,8 +1,8 @@
-# MaterialTracker - Stock Market Style Material Pricing Dashboard
+# CMACMaterialTracker - Stock Market Style Material Pricing Dashboard
 
 ## Overview
 
-MaterialTracker is a sophisticated real-time material pricing management system designed for construction material distributors. The application features a stock market-style interface with aurora theming, comprehensive analytics, and role-based access control. Built with React, TypeScript, and Drizzle ORM, it provides real-time material pricing updates, price change workflows, and historical analytics.
+CMACMaterialTracker is a sophisticated real-time material pricing management system designed for construction material distributors. The application features a stock market-style interface with aurora theming, comprehensive analytics, and role-based access control. Built with React, TypeScript, and Drizzle ORM, it provides real-time material pricing updates, price change workflows, and historical analytics.
 
 ## User Preferences
 

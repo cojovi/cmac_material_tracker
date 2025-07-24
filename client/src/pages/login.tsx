@@ -53,7 +53,7 @@ export default function Login() {
           <div className="flex items-center justify-center mb-4">
             <ChartLine className="h-12 w-12 text-aurora-cyan" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">MaterialTracker</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">CMACMaterialTracker</CardTitle>
           <CardDescription className="text-gray-300">
             Sign in to access the material pricing dashboard
           </CardDescription>

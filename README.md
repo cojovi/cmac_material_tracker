@@ -1,4 +1,4 @@
-# MaterialTracker - Stock Market Style Material Pricing Dashboard
+# CMACMaterialTracker - Stock Market Style Material Pricing Dashboard
 
 A sophisticated, real-time material pricing management system with stock market-style interface, aurora theming, and comprehensive analytics. Built for construction material distributors to track pricing changes, manage inventory, and analyze market trends.
 
