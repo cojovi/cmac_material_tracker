@@ -15,6 +15,7 @@ import {
   sendPriceChangeApprovalNotification,
   sendAdminPriceUpdateNotification 
 } from "./services/slack";
+import { WebClient } from "@slack/web-api";
 import { z } from "zod";
 
 // Helper function to calculate percentage change
@@ -343,27 +344,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Slack interactive components webhook (middleware for parsing form data)
-  app.use('/api/slack/interactive', (req, res, next) => {
-    // Slack sends form-encoded data, not JSON
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      try {
-        // Parse the URL-encoded payload
-        const params = new URLSearchParams(body);
-        req.body = { payload: params.get('payload') };
-        next();
-      } catch (error) {
-        res.status(400).json({ error: 'Invalid payload format' });
-      }
-    });
-  });
-
+  // Slack interactive components webhook
   app.post('/api/slack/interactive', async (req, res) => {
     try {
+      // Respond immediately to avoid timeout
+      res.status(200).send('OK');
+      
+      // Parse the payload from form data
       const payload = JSON.parse(req.body.payload);
       
       if (payload.type === 'block_actions') {
@@ -404,25 +391,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          // Update the original message to show the action was taken
+          // Send a follow-up message to the channel
           const responseText = status === 'approved' 
-            ? `✅ Price change approved by ${payload.user.name}`
-            : `❌ Price change rejected by ${payload.user.name}`;
+            ? `✅ Price change approved by ${payload.user.name || 'Admin'}`
+            : `❌ Price change rejected by ${payload.user.name || 'Admin'}`;
             
-          res.json({
-            response_type: 'in_channel',
-            replace_original: true,
-            text: responseText
-          });
+          // Send follow-up message using Slack API
+          if (process.env.SLACK_BOT_TOKEN) {
+            const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+            await slack.chat.postMessage({
+              channel: process.env.SLACK_CHANNEL_ID || '',
+              text: responseText,
+              thread_ts: payload.message?.ts // Reply in thread if possible
+            });
+          }
         } else {
-          res.status(400).json({ error: 'Unknown action' });
+          console.log('Unknown action:', actionId);
         }
       } else {
-        res.status(400).json({ error: 'Unsupported payload type' });
+        console.log('Unsupported payload type:', payload.type);
       }
     } catch (error) {
       console.error('Error handling Slack interaction:', error);
-      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
