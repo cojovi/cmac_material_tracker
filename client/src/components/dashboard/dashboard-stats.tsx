@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Package, TrendingUp, Clock, AlertTriangle } from "lucide-react";
 import { type DashboardStats as StatsType } from "@shared/schema";
 
 export function DashboardStats() {
+  const [, setLocation] = useLocation();
   const { data: stats, isLoading } = useQuery<StatsType>({
     queryKey: ["/api/dashboard/stats"],
   });
@@ -69,7 +71,10 @@ export function DashboardStats() {
       {statCards.map((stat) => (
         <Card 
           key={stat.title} 
-          className={`glass rounded-xl border ${stat.borderColor} hover-glow material-card`}
+          className={`glass rounded-xl border ${stat.borderColor} hover-glow material-card ${
+            stat.title === "Pending Requests" ? "cursor-pointer transform transition-transform hover:scale-105" : ""
+          }`}
+          onClick={stat.title === "Pending Requests" ? () => setLocation("/pending-requests") : undefined}
         >
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">

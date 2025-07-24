@@ -507,6 +507,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/price-change-requests/:id/reject', requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const request = await storage.updatePriceChangeRequest(id, {
+        status: 'rejected',
+        reviewedBy: req.user!.id,
+        reviewedAt: new Date(),
+      });
+
+      res.json(request);
+    } catch (error) {
+      console.error('Error rejecting price change request:', error);
+      res.status(500).json({ message: 'Failed to reject price change request' });
+    }
+  });
+
+  app.patch('/api/price-change-requests/:id/reject', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
       const { notes } = req.body;
       
       const request = await storage.updatePriceChangeRequest(id, {

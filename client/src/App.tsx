@@ -9,6 +9,7 @@ import Materials from "@/pages/materials";
 import MaterialDetail from "@/pages/material-detail";
 import PriceHistory from "@/pages/price-history";
 import Analytics from "@/pages/analytics";
+import PendingRequests from "@/pages/pending-requests";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/material/:id" component={MaterialDetail} />
       <Route path="/price-history" component={PriceHistory} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/pending-requests" component={PendingRequests} />
       <Route path="/login" component={Login} />
       <Route component={NotFound} />
     </Switch>
