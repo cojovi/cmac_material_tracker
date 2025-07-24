@@ -352,6 +352,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!validation.success) {
+        console.error('Price change request validation failed:', validation.error.errors);
+        console.error('Request body:', req.body);
         return res.status(400).json({ message: 'Invalid input', errors: validation.error.errors });
       }
 
