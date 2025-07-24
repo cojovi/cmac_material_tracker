@@ -130,7 +130,11 @@ export function AdminPriceChangeModal() {
               variant="ghost"
               size="sm"
               className="text-gray-400 hover:text-white"
-              onClick={() => setIsOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
             >
               <X className="h-5 w-5" />
             </Button>
@@ -300,7 +304,11 @@ export function AdminPriceChangeModal() {
                   type="button"
                   variant="outline"
                   className="border-gray-500 hover:bg-gray-700 text-gray-300 hover:text-white"
-                  onClick={() => setIsOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
                 >
                   Cancel
                 </Button>
