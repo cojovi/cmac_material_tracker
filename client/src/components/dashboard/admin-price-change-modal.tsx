@@ -90,250 +90,211 @@ export function AdminPriceChangeModal() {
     return () => document.removeEventListener('click', handleGlobalClick);
   }, [isAdmin, toast]);
 
-  // Handle modal state via DOM manipulation for compatibility with existing code
-  useEffect(() => {
-    const modal = document.getElementById('admin-price-change-modal');
-    if (modal) {
-      if (isOpen) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      } else {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
-    }
-  }, [isOpen]);
+
 
   if (!isAdmin) {
     return null;
   }
 
   return (
-    <>
-      {/* Legacy DOM modal for compatibility */}
-      <div 
-        id="admin-price-change-modal" 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setIsOpen(false);
-          }
-        }}
-      >
-        <div className="glass rounded-xl p-8 max-w-2xl w-full mx-4 border border-aurora-purple/30">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-white flex items-center">
-              <Crown className="mr-3 text-aurora-yellow" />
-              Admin Price Update
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-gray-400 hover:text-white"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsOpen(false);
-              }}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="glass rounded-xl border-aurora-purple/30 max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-white flex items-center">
+            <Crown className="mr-3 text-aurora-yellow" />
+            Admin Price Update
+          </DialogTitle>
+        </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Material Name</FormLabel>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Material Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
+                        placeholder="Enter material name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Location</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
+                        <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-aurora-navy border-aurora-purple/30">
+                        {LOCATIONS.map((location) => (
+                          <SelectItem 
+                            key={location} 
+                            value={location}
+                            className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
+                          >
+                            {location}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="manufacturer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Manufacturer</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
+                          <SelectValue placeholder="Select manufacturer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-aurora-navy border-aurora-purple/30">
+                        {MANUFACTURERS.map((manufacturer) => (
+                          <SelectItem 
+                            key={manufacturer} 
+                            value={manufacturer}
+                            className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
+                          >
+                            {manufacturer}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="productCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Product Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-aurora-navy border-aurora-purple/30">
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <SelectItem 
+                            key={category} 
+                            value={category}
+                            className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
+                          >
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="distributor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Distributor</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
+                          <SelectValue placeholder="Select distributor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-aurora-navy border-aurora-purple/30">
+                        {DISTRIBUTOR_NAMES.map((distributor) => (
+                          <SelectItem 
+                            key={distributor} 
+                            value={distributor}
+                            className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
+                          >
+                            {distributor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="currentPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">New Price</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
                         <Input
-                          className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20"
-                          placeholder="Enter material name"
+                          className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20 pl-8"
+                          placeholder="0.00"
                           {...field}
                         />
-                      </FormControl>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-aurora-red" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Location</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-aurora-navy border-aurora-purple/30">
-                          {LOCATIONS.map((location) => (
-                            <SelectItem 
-                              key={location} 
-                              value={location}
-                              className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
-                            >
-                              {location}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="manufacturer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Manufacturer</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
-                            <SelectValue placeholder="Select manufacturer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-aurora-navy border-aurora-purple/30">
-                          {MANUFACTURERS.map((manufacturer) => (
-                            <SelectItem 
-                              key={manufacturer} 
-                              value={manufacturer}
-                              className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
-                            >
-                              {manufacturer}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="productCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Product Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-aurora-navy border-aurora-purple/30">
-                          {PRODUCT_CATEGORIES.map((category) => (
-                            <SelectItem 
-                              key={category} 
-                              value={category}
-                              className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
-                            >
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="distributor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Distributor</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-aurora-navy/50 border-aurora-purple/30 text-white focus:border-aurora-cyan focus:ring-aurora-cyan/20">
-                            <SelectValue placeholder="Select distributor" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-aurora-navy border-aurora-purple/30">
-                          {DISTRIBUTOR_NAMES.map((distributor) => (
-                            <SelectItem 
-                              key={distributor} 
-                              value={distributor}
-                              className="text-white hover:bg-aurora-purple/20 focus:bg-aurora-purple/20"
-                            >
-                              {distributor}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="currentPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">New Price</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                          <Input
-                            className="bg-aurora-navy/50 border-aurora-purple/30 text-white placeholder-gray-400 focus:border-aurora-cyan focus:ring-aurora-cyan/20 pl-8"
-                            placeholder="0.00"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-aurora-red" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-gray-500 hover:bg-gray-700 text-gray-300 hover:text-white"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-aurora-coral hover:bg-aurora-red text-white font-semibold"
-                  disabled={createMaterialMutation.isPending}
-                >
-                  {createMaterialMutation.isPending ? (
-                    <>
-                      <LoadingSpinner className="mr-2 h-4 w-4" />
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Update Price Immediately
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </div>
-    </>
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-gray-500 hover:bg-gray-700 text-gray-300 hover:text-white"
+                onClick={() => setIsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-aurora-coral hover:bg-aurora-red text-white font-semibold"
+                disabled={createMaterialMutation.isPending}
+              >
+                {createMaterialMutation.isPending ? (
+                  <>
+                    <LoadingSpinner className="mr-2 h-4 w-4" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Update Price Immediately
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
