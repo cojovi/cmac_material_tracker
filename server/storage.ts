@@ -43,6 +43,9 @@ export interface IStorage {
   createPriceChangeRequest(request: InsertPriceChangeRequest): Promise<PriceChangeRequest>;
   getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: User })[]>;
   updatePriceChangeRequest(id: number, updates: Partial<PriceChangeRequest>): Promise<PriceChangeRequest>;
+  updatePriceChangeRequestStatus(id: number, status: string, reviewedBy?: string): Promise<PriceChangeRequest | undefined>;
+  getMaterialByName(name: string): Promise<Material | undefined>;
+  updateMaterialPrice(id: number, newPrice: number, updatedBy: number): Promise<Material>;
 
   // Dashboard analytics
   getDashboardStats(): Promise<DashboardStats>;
@@ -405,6 +408,53 @@ export class DatabaseStorage implements IStorage {
       changePercent: parseFloat(row.recentChange || '0'),
       changeDirection: parseFloat(row.recentChange || '0') > 0 ? 'up' as const : 'down' as const,
     }));
+  }
+
+  async updatePriceChangeRequestStatus(id: number, status: string, reviewedBy?: string): Promise<PriceChangeRequest | undefined> {
+    const result = await db.update(priceChangeRequests)
+      .set({ 
+        status,
+        reviewedAt: new Date(),
+        // Note: reviewedBy expects a number but we're getting Slack user ID string
+        // You might want to map Slack users to your user system
+      })
+      .where(eq(priceChangeRequests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getMaterialByName(name: string): Promise<Material | undefined> {
+    const result = await db.select().from(materials).where(eq(materials.name, name)).limit(1);
+    return result[0];
+  }
+
+  async updateMaterialPrice(id: number, newPrice: number, updatedBy: number): Promise<Material> {
+    // Get current material to store previous price
+    const currentMaterial = await this.getMaterialById(id);
+    
+    // Update the material
+    const result = await db.update(materials)
+      .set({
+        previousPrice: currentMaterial?.currentPrice,
+        currentPrice: newPrice.toString(),
+        lastUpdated: new Date(),
+        updatedBy: updatedBy
+      })
+      .where(eq(materials.id, id))
+      .returning();
+
+    // Add price history entry
+    if (currentMaterial) {
+      await this.addPriceHistory({
+        materialId: id,
+        oldPrice: currentMaterial.currentPrice,
+        newPrice: newPrice.toString(),
+        submittedBy: updatedBy,
+        status: 'approved'
+      });
+    }
+
+    return result[0];
   }
 }
 

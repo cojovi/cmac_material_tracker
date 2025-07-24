@@ -343,6 +343,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Slack interactive components webhook (middleware for parsing form data)
+  app.use('/api/slack/interactive', (req, res, next) => {
+    // Slack sends form-encoded data, not JSON
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        // Parse the URL-encoded payload
+        const params = new URLSearchParams(body);
+        req.body = { payload: params.get('payload') };
+        next();
+      } catch (error) {
+        res.status(400).json({ error: 'Invalid payload format' });
+      }
+    });
+  });
+
+  app.post('/api/slack/interactive', async (req, res) => {
+    try {
+      const payload = JSON.parse(req.body.payload);
+      
+      if (payload.type === 'block_actions') {
+        const action = payload.actions[0];
+        const actionId = action.action_id;
+        const value = action.value;
+        
+        if (actionId === 'approve_price_change' || actionId === 'reject_price_change') {
+          const [actionType, requestId] = value.split('_');
+          const status = actionType === 'approve' ? 'approved' : 'rejected';
+          
+          // Update the request status
+          const updatedRequest = await storage.updatePriceChangeRequestStatus(
+            parseInt(requestId), 
+            status,
+            payload.user.name // Slack user name for logging
+          );
+          
+          if (updatedRequest && status === 'approved') {
+            // If approved, update the material price
+            const material = await storage.getMaterialByName(updatedRequest.materialName);
+            if (material) {
+              // Use admin user ID (1) for automated approvals from Slack
+              await storage.updateMaterialPrice(
+                material.id,
+                parseFloat(updatedRequest.requestedPrice),
+                1 // Default admin user ID for Slack approvals
+              );
+              
+              // Send approval notification
+              await sendPriceChangeApprovalNotification({
+                materialName: updatedRequest.materialName,
+                distributor: updatedRequest.distributor,
+                newPrice: updatedRequest.requestedPrice,
+                oldPrice: updatedRequest.currentPrice || undefined,
+                approvedBy: payload.user.name || 'Admin'
+              });
+            }
+          }
+          
+          // Update the original message to show the action was taken
+          const responseText = status === 'approved' 
+            ? `✅ Price change approved by ${payload.user.name}`
+            : `❌ Price change rejected by ${payload.user.name}`;
+            
+          res.json({
+            response_type: 'in_channel',
+            replace_original: true,
+            text: responseText
+          });
+        } else {
+          res.status(400).json({ error: 'Unknown action' });
+        }
+      } else {
+        res.status(400).json({ error: 'Unsupported payload type' });
+      }
+    } catch (error) {
+      console.error('Error handling Slack interaction:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Price change requests
   app.post('/api/price-change-requests', requireAuth, async (req, res) => {
     try {
