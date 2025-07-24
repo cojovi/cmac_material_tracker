@@ -58,6 +58,8 @@ The application uses PostgreSQL as the primary database with Drizzle ORM:
 
 ### External Integrations
 - **Slack Notifications**: Automated alerts for price changes and approvals
+- **Slack Interactive Components**: Approve/Reject buttons in Slack messages with webhook at `/api/slack/interactive`
+- **Deployment URL**: https://cmac-material-tracker.replit.app/
 - **API Design**: RESTful endpoints for all operations
 - **Real-time Data**: Periodic refresh mechanisms for live data updates
 
