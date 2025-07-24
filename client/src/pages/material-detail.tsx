@@ -65,12 +65,40 @@ export default function MaterialDetail() {
   const priceChangePercent = previousPrice > 0 ? ((priceChange / previousPrice) * 100) : 0;
   const isPositiveChange = priceChange >= 0;
 
-  // Prepare chart data
-  const chartData = priceHistory?.map(history => ({
-    date: new Date(history.submittedAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    price: parseFloat(history.newPrice || '0'),
-    timestamp: history.submittedAt
-  })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) || [];
+  // Prepare chart data with enhanced logic for better visualization
+  const chartData = (() => {
+    if (!priceHistory || priceHistory.length === 0) return [];
+    
+    const historyPoints = priceHistory.map(history => ({
+      date: new Date(history.submittedAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      price: parseFloat(history.newPrice || '0'),
+      timestamp: history.submittedAt,
+      oldPrice: parseFloat(history.oldPrice || '0')
+    })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    // If we only have one price change, create a starting point for better visualization
+    if (historyPoints.length === 1) {
+      const singlePoint = historyPoints[0];
+      const startDate = new Date(new Date(singlePoint.timestamp).getTime() - 24 * 60 * 60 * 1000); // 1 day before
+      
+      return [
+        {
+          date: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          price: singlePoint.oldPrice,
+          timestamp: startDate.toISOString(),
+          isStarting: true
+        },
+        {
+          date: singlePoint.date,
+          price: singlePoint.price,
+          timestamp: singlePoint.timestamp,
+          isStarting: false
+        }
+      ];
+    }
+
+    return historyPoints;
+  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-aurora-navy via-aurora-purple to-aurora-violet p-6">
