@@ -33,7 +33,23 @@ export function PriceHistoryImportModal({ isOpen, onClose }: PriceHistoryImportM
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await apiRequest('POST', '/api/price-history/upload', formData);
+      const response = await fetch('/api/price-history/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.message || `Upload failed with status ${response.status}`;
+        } catch {
+          errorMessage = `Upload failed: ${errorText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       return response.json();
     },
@@ -48,6 +64,7 @@ export function PriceHistoryImportModal({ isOpen, onClose }: PriceHistoryImportM
         queryClient.invalidateQueries({ queryKey: ['/api/materials'] });
         queryClient.invalidateQueries({ queryKey: ['/api/price-changes/recent'] });
         queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/price-history'] });
       }
       if (data.errors.length > 0) {
         toast({

@@ -289,15 +289,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Price history routes
-  app.get('/api/price-history/:materialId', requireAuth, async (req, res) => {
+  // Price history routes - supports both /materialId/timeRange and /materialId?timeRange=timeRange
+  app.get('/api/price-history/:materialId/:timeRange?', requireAuth, async (req, res) => {
     try {
       const materialId = parseInt(req.params.materialId);
       if (isNaN(materialId)) {
         return res.status(400).json({ message: 'Invalid material ID' });
       }
       
-      const timeRange = req.query.timeRange as string || '3m';
+      const timeRange = req.params.timeRange || req.query.timeRange as string || '3m';
       
       // Convert time range to days
       let days = 90; // Default 3 months

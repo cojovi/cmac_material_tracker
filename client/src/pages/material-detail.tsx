@@ -70,7 +70,7 @@ export default function MaterialDetail() {
     date: new Date(history.submittedAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     price: parseFloat(history.newPrice || '0'),
     timestamp: history.submittedAt
-  })) || [];
+  })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-aurora-navy via-aurora-purple to-aurora-violet p-6">
