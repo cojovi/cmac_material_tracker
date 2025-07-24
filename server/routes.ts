@@ -346,12 +346,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Slack interactive components webhook
   app.post('/api/slack/interactive', async (req, res) => {
+    console.log('Received Slack interactive request');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    
     try {
       // Respond immediately to avoid timeout
       res.status(200).send('OK');
       
+      // Check if payload exists
+      if (!req.body.payload) {
+        console.error('No payload in request body');
+        return;
+      }
+      
       // Parse the payload from form data
       const payload = JSON.parse(req.body.payload);
+      console.log('Parsed payload:', JSON.stringify(payload, null, 2));
       
       if (payload.type === 'block_actions') {
         const action = payload.actions[0];
