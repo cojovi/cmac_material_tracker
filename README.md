@@ -51,25 +51,25 @@ A sophisticated, real-time material pricing management system with stock market-
 
 ### Backend
 - **Express.js** with TypeScript for API development
-- **Supabase** PostgreSQL for database and authentication
+- **PostgreSQL** (Neon serverless) for database hosting
 - **Drizzle ORM** for type-safe database operations
 - **Passport.js** for authentication strategies
-- **Node-cron** for scheduled tasks and data refresh
 - **Slack Web API** for team notifications
-- **Express Session** for secure session management
+- **Express Session** with PostgreSQL storage
+- **Multer** for CSV file upload handling
 
 ### Database
-- **Supabase PostgreSQL** with row-level security
-- **Automated Migrations** via Drizzle Kit
-- **Real-time Subscriptions** for live data updates
-- **Backup & Recovery** automated daily backups
-- **Performance Optimization** with indexed queries
+- **Neon PostgreSQL** serverless database
+- **Drizzle migrations** for schema management
+- **Session storage** in PostgreSQL
+- **Real-time price tracking** with audit trails
+- **Optimized queries** with proper indexing
 
 ## 📋 Prerequisites
 
 - **Node.js** 18.0 or higher
 - **npm** 8.0 or higher
-- **Supabase Account** for database hosting
+- **Neon Database** account (or PostgreSQL server)
 - **Slack Workspace** (optional) for notifications
 - **Modern Browser** with JavaScript enabled
 
@@ -77,11 +77,10 @@ A sophisticated, real-time material pricing management system with stock market-
 
 ### 1. Database Setup
 
-1. Create a Supabase project at [supabase.com](https://supabase.com/dashboard/projects)
-2. Navigate to your project dashboard
-3. Click the "Connect" button in the top toolbar
-4. Copy the URI from "Connection string" → "Transaction pooler"
-5. Replace `[YOUR-PASSWORD]` with your database password
+1. Create a Neon database at [neon.tech](https://neon.tech)
+2. Create a new project and database
+3. Copy the connection string from your dashboard
+4. The DATABASE_URL will be automatically configured in your environment
 
 ### 2. Environment Configuration
 

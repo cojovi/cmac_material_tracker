@@ -5,6 +5,7 @@ import { HeaderNavigation } from "@/components/dashboard/header-navigation";
 import { SidebarNavigation } from "@/components/dashboard/sidebar-navigation";
 import { MaterialsDataTable } from "@/components/dashboard/materials-data-table";
 import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
+import { StandardPriceChangeRequest } from "@/components/dashboard/standard-price-change-request";
 import { CSVUploadModal } from "@/components/dashboard/csv-upload-modal";
 import { BulkDataImportModal } from "@/components/dashboard/bulk-data-import-modal";
 import { PriceHistoryImportModal } from "@/components/dashboard/price-history-import-modal";
@@ -41,6 +42,9 @@ export default function Materials() {
         <SidebarNavigation />
         
         <main className="flex-1 p-6 overflow-auto custom-scrollbar">
+          {/* Price Change Request Form for Standard Users */}
+          {!isAdmin && <StandardPriceChangeRequest />}
+
           <Card className="glass rounded-xl border-aurora-green/20 mb-6">
             <CardHeader>
               <div className="flex items-center justify-between">
