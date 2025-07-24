@@ -382,17 +382,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (updatedRequest && status === 'approved') {
             // If approved, update the material price
-            const material = await storage.getMaterialByName(updatedRequest.materialName);
+            console.log(`🔍 Looking for material: "${updatedRequest.materialName}" with current price: "${updatedRequest.currentPrice}"`);
+            
+            // Try to find material by name and current price first (more accurate)
+            let material = updatedRequest.currentPrice 
+              ? await storage.findMaterialByNameAndPrice(updatedRequest.materialName, updatedRequest.currentPrice)
+              : null;
+            
+            // Fallback to name-only search
+            if (!material) {
+              material = await storage.getMaterialByName(updatedRequest.materialName);
+            }
+            
+            console.log('🔍 Found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
+            
             if (material) {
               // Get an admin user for automated approvals from Slack
               const adminUser = await storage.getUserByEmail('codyv@cmacroofing.com');
               const adminUserId = adminUser?.id || 2; // Fallback to user ID 2
+              console.log(`💰 Updating material ID ${material.id} price from ${material.currentPrice} to ${updatedRequest.requestedPrice}`);
               
-              await storage.updateMaterialPrice(
-                material.id,
-                parseFloat(updatedRequest.requestedPrice),
-                adminUserId
-              );
+              try {
+                await storage.updateMaterialPrice(
+                  material.id,
+                  parseFloat(updatedRequest.requestedPrice),
+                  adminUserId
+                );
+                console.log(`✅ Successfully updated material price for ${material.name}`);
+              } catch (error) {
+                console.error(`❌ Failed to update material price:`, error);
+              }
               
               // Send approval notification
               await sendPriceChangeApprovalNotification({
@@ -487,6 +506,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reviewedBy: req.user!.id,
         reviewedAt: new Date(),
       });
+
+      // Update the material price when approved manually from dashboard
+      console.log(`🔍 Manual approval: Looking for material: "${request.materialName}" with current price: "${request.currentPrice}"`);
+      
+      // Try to find material by name and current price first (more accurate)
+      let material = request.currentPrice 
+        ? await storage.findMaterialByNameAndPrice(request.materialName, request.currentPrice)
+        : null;
+      
+      // Fallback to name-only search
+      if (!material) {
+        material = await storage.getMaterialByName(request.materialName);
+      }
+      
+      console.log('🔍 Manual approval found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
+      
+      if (material) {
+        console.log(`💰 Manual approval: Updating material ID ${material.id} price from ${material.currentPrice} to ${request.requestedPrice}`);
+        
+        try {
+          await storage.updateMaterialPrice(
+            material.id,
+            parseFloat(request.requestedPrice),
+            req.user!.id
+          );
+          console.log(`✅ Manual approval: Successfully updated material price for ${material.name}`);
+        } catch (error) {
+          console.error(`❌ Manual approval: Failed to update material price:`, error);
+        }
+      } else {
+        console.error(`❌ Manual approval: Material not found: "${request.materialName}"`);
+      }
 
       // Send approval notification
       await sendPriceChangeApprovalNotification({

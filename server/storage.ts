@@ -428,6 +428,16 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async findMaterialByNameAndPrice(name: string, currentPrice: string): Promise<Material | undefined> {
+    const result = await db.select().from(materials)
+      .where(and(
+        eq(materials.name, name),
+        eq(materials.currentPrice, currentPrice)
+      ))
+      .limit(1);
+    return result[0];
+  }
+
   async updateMaterialPrice(id: number, newPrice: number, updatedBy: number): Promise<Material> {
     // Get current material to store previous price
     const currentMaterial = await this.getMaterialById(id);
