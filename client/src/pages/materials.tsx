@@ -7,16 +7,18 @@ import { MaterialsDataTable } from "@/components/dashboard/materials-data-table"
 import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
 import { CSVUploadModal } from "@/components/dashboard/csv-upload-modal";
 import { BulkDataImportModal } from "@/components/dashboard/bulk-data-import-modal";
+import { PriceHistoryImportModal } from "@/components/dashboard/price-history-import-modal";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Plus, Package } from "lucide-react";
+import { Upload, Plus, Package, History } from "lucide-react";
 
 export default function Materials() {
   const { user, isLoading, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [showCSVUpload, setShowCSVUpload] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showPriceHistoryImport, setShowPriceHistoryImport] = useState(false);
 
   if (isLoading) {
     return (
@@ -63,6 +65,13 @@ export default function Materials() {
                       Quick CSV Upload
                     </Button>
                     <Button
+                      onClick={() => setShowPriceHistoryImport(true)}
+                      className="bg-aurora-coral hover:bg-aurora-red text-white border-0"
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      Import Price History
+                    </Button>
+                    <Button
                       data-event="click:openPriceChangeModal"
                       className="bg-aurora-cyan hover:bg-aurora-cyan/80 text-white border-0"
                     >
@@ -95,6 +104,12 @@ export default function Materials() {
         <BulkDataImportModal
           isOpen={showBulkImport}
           onClose={() => setShowBulkImport(false)}
+        />
+      )}
+      {showPriceHistoryImport && (
+        <PriceHistoryImportModal
+          isOpen={showPriceHistoryImport}
+          onClose={() => setShowPriceHistoryImport(false)}
         />
       )}
     </div>

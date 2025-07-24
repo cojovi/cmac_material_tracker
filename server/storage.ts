@@ -209,7 +209,24 @@ export class DatabaseStorage implements IStorage {
     const result = await db.insert(priceHistory).values({
       ...history,
       changePercent: changePercent.toString(),
+      approvedAt: history.status === 'approved' ? new Date() : null,
     }).returning();
+    
+    return result[0];
+  }
+
+  async findMaterialByDetails(name: string, distributor: string, location: string): Promise<Material | undefined> {
+    const result = await db
+      .select()
+      .from(materials)
+      .where(
+        and(
+          eq(materials.name, name),
+          eq(materials.distributor, distributor),
+          eq(materials.location, location)
+        )
+      )
+      .limit(1);
     
     return result[0];
   }
@@ -275,20 +292,7 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async findMaterialByDetails(name: string, distributor: string, location: string): Promise<Material | undefined> {
-    const result = await db
-      .select()
-      .from(materials)
-      .where(
-        and(
-          eq(materials.name, name),
-          eq(materials.distributor, distributor),
-          eq(materials.location, location)
-        )
-      )
-      .limit(1);
-    return result[0];
-  }
+
 
   async createPriceHistory(history: InsertPriceHistory): Promise<PriceHistory> {
     const result = await db.insert(priceHistory).values(history).returning();

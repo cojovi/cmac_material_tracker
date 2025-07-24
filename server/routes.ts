@@ -293,6 +293,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/price-history/:materialId', requireAuth, async (req, res) => {
     try {
       const materialId = parseInt(req.params.materialId);
+      if (isNaN(materialId)) {
+        return res.status(400).json({ message: 'Invalid material ID' });
+      }
+      
       const timeRange = req.query.timeRange as string || '3m';
       
       // Convert time range to days
@@ -315,6 +319,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/materials/:id/history', requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid material ID' });
+      }
+      
       const days = parseInt(req.query.days as string) || 30;
       const history = await storage.getPriceHistory(id, days);
       res.json(history);
@@ -577,7 +585,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notes: record.changeReason?.trim() || 'Historical data import',
           };
 
-          await storage.createPriceHistory(priceHistoryData);
+          await storage.addPriceHistory({
+            materialId: material.id,
+            oldPrice: record.oldPrice?.toString().trim(),
+            newPrice: record.newPrice?.toString().trim(),
+            submittedBy: req.user!.id,
+            status: 'approved' as const,
+            approvedBy: req.user!.id,
+            notes: record.changeReason?.trim() || 'Historical data import',
+          });
           results.success++;
           
         } catch (error) {
