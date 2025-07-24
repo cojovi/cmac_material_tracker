@@ -113,9 +113,8 @@ export const insertPriceChangeRequestSchema = createInsertSchema(priceChangeRequ
   submittedAt: true,
   reviewedAt: true,
   slackMessageTs: true,
-}).extend({
-  distributor: z.enum(DISTRIBUTOR_NAMES),
 });
+// Remove strict distributor validation for price change requests since they reference material names not distributors
 
 export const loginSchema = z.object({
   email: z.string().email(),
