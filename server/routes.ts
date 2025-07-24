@@ -384,11 +384,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // If approved, update the material price
             const material = await storage.getMaterialByName(updatedRequest.materialName);
             if (material) {
-              // Use admin user ID (1) for automated approvals from Slack
+              // Get an admin user for automated approvals from Slack
+              const adminUser = await storage.getUserByEmail('codyv@cmacroofing.com');
+              const adminUserId = adminUser?.id || 2; // Fallback to user ID 2
+              
               await storage.updateMaterialPrice(
                 material.id,
                 parseFloat(updatedRequest.requestedPrice),
-                1 // Default admin user ID for Slack approvals
+                adminUserId
               );
               
               // Send approval notification
