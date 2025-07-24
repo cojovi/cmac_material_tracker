@@ -98,7 +98,7 @@ export function StandardPriceChangeRequest() {
       setSelectedMaterial(material);
       form.setValue("materialName", material.name);
       form.setValue("distributor", material.distributor);
-      form.setValue("newPrice", material.currentPrice);
+      form.setValue("newPrice", Number(material.currentPrice || 0));
     }
   };
 
@@ -243,17 +243,17 @@ export function StandardPriceChangeRequest() {
         {selectedMaterial && (
           <div className="mt-4 p-3 rounded-lg bg-aurora-purple/10 border border-aurora-purple/30">
             <p className="text-sm text-gray-300">
-              <span className="text-white font-medium">Current Price:</span> ${selectedMaterial.currentPrice.toFixed(2)}
+              <span className="text-white font-medium">Current Price:</span> ${Number(selectedMaterial.currentPrice || 0).toFixed(2)}
               {form.watch("newPrice") && (
                 <span className="ml-4">
-                  <span className="text-white font-medium">New Price:</span> ${form.watch("newPrice").toFixed(2)}
+                  <span className="text-white font-medium">New Price:</span> ${Number(form.watch("newPrice") || 0).toFixed(2)}
                   <span className={`ml-2 font-medium ${
-                    form.watch("newPrice") > selectedMaterial.currentPrice 
+                    Number(form.watch("newPrice") || 0) > Number(selectedMaterial.currentPrice || 0)
                       ? "text-aurora-coral" 
                       : "text-aurora-green"
                   }`}>
-                    ({form.watch("newPrice") > selectedMaterial.currentPrice ? "+" : ""}
-                    ${(form.watch("newPrice") - selectedMaterial.currentPrice).toFixed(2)})
+                    ({Number(form.watch("newPrice") || 0) > Number(selectedMaterial.currentPrice || 0) ? "+" : ""}
+                    ${(Number(form.watch("newPrice") || 0) - Number(selectedMaterial.currentPrice || 0)).toFixed(2)})
                   </span>
                 </span>
               )}
