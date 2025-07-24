@@ -21,39 +21,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  const { isLoading } = useQuery({
-    queryKey: ["/api/auth/me"],
-    queryFn: async () => {
+  useEffect(() => {
+    const checkAuth = async () => {
       try {
+        setIsLoading(true);
         const response = await apiRequest("GET", "/api/auth/me");
         const data = await response.json();
         setUser(data.user);
-        return data.user;
       } catch (error) {
         setUser(null);
-        return null;
+      } finally {
+        setIsLoading(false);
       }
-    },
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,   // 10 minutes
-  });
+    };
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
+    checkAuth();
+  }, []);
+
+  const logout = async () => {
+    try {
       await apiRequest("POST", "/api/auth/logout");
-    },
-    onSuccess: () => {
       setUser(null);
       queryClient.clear();
-    },
-  });
-
-  const logout = () => {
-    logoutMutation.mutate();
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Clear local state even if server logout fails
+      setUser(null);
+      queryClient.clear();
+    }
   };
 
   const isAdmin = user?.role === "admin";
