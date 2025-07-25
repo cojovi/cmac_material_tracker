@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { HeaderNavigation } from "@/components/dashboard/header-navigation";
 import { SidebarNavigation } from "@/components/dashboard/sidebar-navigation";
 import { PriceTrendsChart } from "@/components/dashboard/price-trends-chart";
+import { DistributorTrendsChart } from "@/components/dashboard/distributor-trends-chart";
 import { RecentPriceChanges } from "@/components/dashboard/recent-price-changes";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +75,12 @@ export default function PriceHistoryPage() {
             </CardContent>
           </Card>
 
+          {/* Distributor Trends Chart - New chart showing distributor price change rates */}
+          <div className="mb-6">
+            <DistributorTrendsChart />
+          </div>
+
+          {/* Material Price Trends Chart - Moved down as requested */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
             <div className="xl:col-span-2">
               <PriceTrendsChart />
@@ -112,7 +119,7 @@ export default function PriceHistoryPage() {
                       </TableRow>
                     ) : (
                       allPriceHistory.map((record) => {
-                        const changeStyle = getChangeStyle(record.changePercent);
+                        const changeStyle = getChangeStyle(record.changePercent || undefined);
                         return (
                           <TableRow
                             key={record.id}
