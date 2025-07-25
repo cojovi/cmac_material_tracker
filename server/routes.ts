@@ -623,15 +623,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const rowNumber = i + 2; // +2 because CSV has header row and arrays are 0-indexed
 
         try {
+          // Auto-generate ticker symbol if missing
+          let tickerSymbol = record.tickerSymbol?.trim();
+          if (!tickerSymbol) {
+            const distributorMap: { [key: string]: string } = {
+              'ABCSupply': 'ABC',
+              'Beacon': 'BCN', 
+              'SRSProducts': 'SRS',
+              'CommercialDistributors': 'CDH',
+              'CommericalDistributors': 'CDH', // Handle typo
+              'Other': 'OTH'
+            };
+            tickerSymbol = distributorMap[record.distributor?.trim()] || 'OTH';
+          }
+
+          // Fix common enum value issues
+          let location = record.location?.trim();
+          if (location === 'OTH') location = 'DFW'; // Default invalid location to DFW
+          
+          let productCategory = record.productCategory?.trim();
+          if (productCategory === 'Garage Doors') productCategory = 'Garage Door';
+          
+          let distributor = record.distributor?.trim();
+          if (distributor === 'CommericalDistributors') distributor = 'CommercialDistributors';
+
           // Validate required fields
           const materialData = {
             name: record.name?.trim(),
-            location: record.location?.trim(),
+            location: location,
             manufacturer: record.manufacturer?.trim(),
-            productCategory: record.productCategory?.trim(),
-            distributor: record.distributor?.trim(),
+            productCategory: productCategory,
+            distributor: distributor,
             currentPrice: record.currentPrice?.toString().trim(),
-            tickerSymbol: record.tickerSymbol?.trim(),
+            tickerSymbol: tickerSymbol,
           };
 
           // Validate using Zod schema
