@@ -19,7 +19,8 @@ export default function PriceHistoryPage() {
   const [, setLocation] = useLocation();
 
   const { data: allPriceHistory = [], isLoading: historyLoading } = useQuery<(PriceHistory & { material: Material })[]>({
-    queryKey: ["/api/price-history/all"],
+    queryKey: ["/api/price-changes/recent"],
+    select: (data) => data.slice(0, 50), // Use recent changes as price history for now
   });
 
   if (isLoading) {
