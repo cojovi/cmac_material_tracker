@@ -5,6 +5,7 @@ import { ScrollingTicker } from "@/components/dashboard/scrolling-ticker";
 import { SidebarNavigation } from "@/components/dashboard/sidebar-navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { PriceTrendsChart } from "@/components/dashboard/price-trends-chart";
+import { DistributorTrendsChart } from "@/components/dashboard/distributor-trends-chart";
 import { RecentPriceChanges } from "@/components/dashboard/recent-price-changes";
 import { PerformanceMetrics } from "@/components/dashboard/performance-metrics";
 import { LocationAnalysis } from "@/components/dashboard/location-analysis";
@@ -40,6 +41,11 @@ export default function Dashboard() {
         
         <main className="flex-1 p-6 overflow-auto custom-scrollbar">
           <DashboardStats />
+          
+          {/* Distributor Trends Chart - New chart showing distributor price change rates */}
+          <div className="mb-6">
+            <DistributorTrendsChart />
+          </div>
           
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
             <div className="xl:col-span-2">
