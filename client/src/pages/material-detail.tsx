@@ -10,9 +10,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Material, PriceHistory } from "@shared/schema";
 
 const timeRangeOptions = [
-  { label: "7D", value: "7d" },
   { label: "1M", value: "1m" },
   { label: "3M", value: "3m" },
+  { label: "6M", value: "6m" },
   { label: "1Y", value: "1y" },
 ] as const;
 
@@ -65,34 +65,51 @@ export default function MaterialDetail() {
   const priceChangePercent = previousPrice > 0 ? ((priceChange / previousPrice) * 100) : 0;
   const isPositiveChange = priceChange >= 0;
 
-  // Prepare chart data with enhanced logic for better visualization
+  // Prepare chart data with real price change dates
   const chartData = (() => {
     if (!priceHistory || priceHistory.length === 0) return [];
     
-    const historyPoints = priceHistory.map(history => ({
-      date: new Date(history.submittedAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      price: parseFloat(history.newPrice || '0'),
-      timestamp: history.submittedAt,
-      oldPrice: parseFloat(history.oldPrice || '0')
-    })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // Sort price history by date and use actual submission dates
+    const historyPoints = priceHistory
+      .map(history => {
+        const submissionDate = new Date(history.submittedAt || '');
+        return {
+          date: submissionDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: submissionDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+          }),
+          price: parseFloat(history.newPrice || '0'),
+          timestamp: history.submittedAt,
+          oldPrice: parseFloat(history.oldPrice || '0'),
+          fullDate: submissionDate
+        };
+      })
+      .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
 
     // If we only have one price change, create a starting point for better visualization
     if (historyPoints.length === 1) {
       const singlePoint = historyPoints[0];
-      const startDate = new Date(new Date(singlePoint.timestamp).getTime() - 24 * 60 * 60 * 1000); // 1 day before
+      const startDate = new Date(singlePoint.fullDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 1 week before
       
       return [
         {
-          date: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          date: startDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: startDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+          }),
           price: singlePoint.oldPrice,
           timestamp: startDate.toISOString(),
-          isStarting: true
+          isStarting: true,
+          fullDate: startDate
         },
         {
           date: singlePoint.date,
           price: singlePoint.price,
           timestamp: singlePoint.timestamp,
-          isStarting: false
+          isStarting: false,
+          fullDate: singlePoint.fullDate
         }
       ];
     }

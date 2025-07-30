@@ -306,6 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case '7d': days = 7; break;
         case '1m': days = 30; break;
         case '3m': days = 90; break;
+        case '6m': days = 180; break;
         case '1y': days = 365; break;
       }
       
