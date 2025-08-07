@@ -30,7 +30,7 @@ export function WallDisplayView({ onExitDisplayView }: WallDisplayViewProps) {
 
   // Auto-advance sections every 10 seconds
   const SECTION_DURATION = 10000;
-  const sections = ['overview', 'distributors', 'locations', 'materials', 'trends'];
+  const sections = ['overview', 'distributors', 'locations', 'materials', 'recent-changes', 'trends'];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -209,29 +209,76 @@ export function WallDisplayView({ onExitDisplayView }: WallDisplayViewProps) {
   );
 
   const MaterialsSection = () => (
-    <div className="h-full flex flex-col">
-      <div className="text-center mb-8">
-        <h2 className="text-6xl font-bold text-white mb-4">Top Materials by Value</h2>
-        <p className="text-2xl text-aurora-cyan">Highest value materials and recent changes</p>
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="text-center mb-6">
+        <h2 className="text-5xl font-bold text-white mb-3">Top Materials by Value</h2>
+        <p className="text-xl text-aurora-cyan">Highest value materials and recent changes</p>
       </div>
 
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 grid grid-cols-2 gap-4 overflow-hidden">
         {materials
           .sort((a, b) => parseFloat(b.currentPrice) - parseFloat(a.currentPrice))
-          .slice(0, 8)
+          .slice(0, 6)
           .map((material) => (
-          <div key={material.id} className="flex items-center justify-between p-6 bg-aurora-navy/20 rounded-lg glass border-aurora-cyan/20">
-            <div className="flex items-center space-x-6">
-              <Warehouse className="h-12 w-12 text-aurora-cyan" />
-              <div>
-                <div className="text-3xl font-medium text-white">{material.name}</div>
-                <div className="text-2xl text-gray-300">{material.distributor} • {material.location}</div>
-                <div className="text-xl text-gray-400">{material.productCategory}</div>
+          <div key={material.id} className="flex items-center justify-between p-4 bg-aurora-navy/20 rounded-lg glass border-aurora-cyan/20 min-h-0">
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
+              <Warehouse className="h-10 w-10 text-aurora-cyan flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-2xl font-medium text-white truncate">{material.name}</div>
+                <div className="text-lg text-gray-300 truncate">{material.distributor} • {material.location}</div>
+                <div className="text-base text-gray-400 truncate">{material.productCategory}</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-4xl font-bold text-white">${parseFloat(material.currentPrice).toFixed(2)}</div>
-              <div className="text-2xl text-aurora-cyan">{material.tickerSymbol}</div>
+            <div className="text-right flex-shrink-0 ml-4">
+              <div className="text-3xl font-bold text-white">${parseFloat(material.currentPrice).toFixed(2)}</div>
+              <div className="text-lg text-aurora-cyan">{material.tickerSymbol}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const RecentChangesSection = () => (
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="text-center mb-6">
+        <h2 className="text-5xl font-bold text-white mb-3">Most Recent Price Changes</h2>
+        <p className="text-xl text-aurora-cyan">Latest price updates and market movements</p>
+      </div>
+
+      <div className="flex-1 space-y-4 overflow-hidden">
+        {recentChanges.slice(0, 8).map((change, index) => (
+          <div key={change.id} className="flex items-center justify-between p-5 bg-aurora-navy/20 rounded-lg glass border-aurora-green/20">
+            <div className="flex items-center space-x-6 flex-1 min-w-0">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-aurora-cyan/20 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-aurora-cyan">#{index + 1}</span>
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-2xl font-medium text-white truncate">{change.material.name}</div>
+                <div className="text-lg text-gray-300 truncate">{change.material.distributor} • {change.material.location}</div>
+                <div className="text-base text-gray-400">
+                  {new Date(change.submittedAt || '').toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0 ml-6">
+              <div className="text-3xl font-bold text-white">${parseFloat(change.newPrice).toFixed(2)}</div>
+              {change.changePercent && (
+                <div className={`text-2xl font-semibold flex items-center justify-end gap-2 ${
+                  parseFloat(change.changePercent) > 0 ? 'text-aurora-green' : 'text-aurora-red'
+                }`}>
+                  {parseFloat(change.changePercent) > 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+                  {parseFloat(change.changePercent) > 0 ? '+' : ''}
+                  {parseFloat(change.changePercent).toFixed(1)}%
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -252,43 +299,43 @@ export function WallDisplayView({ onExitDisplayView }: WallDisplayViewProps) {
     });
 
     return (
-      <div className="h-full flex flex-col">
-        <div className="text-center mb-8">
-          <h2 className="text-6xl font-bold text-white mb-4">Market Trends</h2>
-          <p className="text-2xl text-aurora-cyan">30-day material pricing trends</p>
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="text-center mb-6">
+          <h2 className="text-5xl font-bold text-white mb-3">Market Trends</h2>
+          <p className="text-xl text-aurora-cyan">30-day material pricing trends</p>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           <Card className="glass border-aurora-purple/30 bg-aurora-navy/10 h-full">
-            <CardContent className="p-8 h-full">
+            <CardContent className="p-6 h-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis 
                     dataKey="date" 
                     stroke="#9CA3AF" 
-                    fontSize={16}
-                    tick={{ fontSize: 16 }}
+                    fontSize={14}
+                    tick={{ fontSize: 14 }}
                   />
                   <YAxis 
                     stroke="#9CA3AF" 
-                    fontSize={16}
-                    tick={{ fontSize: 16 }}
+                    fontSize={14}
+                    tick={{ fontSize: 14 }}
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#1f2937', 
                       border: '1px solid #6366f1',
                       borderRadius: '8px',
-                      fontSize: '18px'
+                      fontSize: '16px'
                     }}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="materials" 
                     stroke="#06b6d4" 
-                    strokeWidth={4}
-                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 6 }}
+                    strokeWidth={3}
+                    dot={{ fill: '#06b6d4', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -305,6 +352,7 @@ export function WallDisplayView({ onExitDisplayView }: WallDisplayViewProps) {
       case 'distributors': return <DistributorSection />;
       case 'locations': return <LocationSection />;
       case 'materials': return <MaterialsSection />;
+      case 'recent-changes': return <RecentChangesSection />;
       case 'trends': return <TrendsSection />;
       default: return <OverviewSection />;
     }
@@ -352,8 +400,10 @@ export function WallDisplayView({ onExitDisplayView }: WallDisplayViewProps) {
       </div>
 
       {/* Main Content */}
-      <div className="h-full w-full p-12 pt-20">
-        {renderSection()}
+      <div className="h-full w-full p-8 pt-16 pb-16 overflow-hidden">
+        <div className="h-full max-h-full">
+          {renderSection()}
+        </div>
       </div>
 
       {/* Company Branding */}
