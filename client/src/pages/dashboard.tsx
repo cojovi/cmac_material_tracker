@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { HeaderNavigation } from "@/components/dashboard/header-navigation";
@@ -12,11 +13,15 @@ import { LocationAnalysis } from "@/components/dashboard/location-analysis";
 import { MaterialsDataTable } from "@/components/dashboard/materials-data-table";
 import { PriceChangeRequestForm } from "@/components/dashboard/price-change-request-form";
 import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
+import { WallDisplayView } from "@/components/dashboard/wall-display-view";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/button";
+import { Monitor, LayoutDashboard } from "lucide-react";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const [isDisplayView, setIsDisplayView] = useState(false);
 
   if (isLoading) {
     return (
@@ -31,6 +36,11 @@ export default function Dashboard() {
     return null;
   }
 
+  // Display View Mode - Full screen wall display
+  if (isDisplayView) {
+    return <WallDisplayView onExitDisplayView={() => setIsDisplayView(false)} />;
+  }
+
   return (
     <div className="min-h-screen">
       <HeaderNavigation />
@@ -40,6 +50,18 @@ export default function Dashboard() {
         <SidebarNavigation />
         
         <main className="flex-1 p-6 overflow-auto custom-scrollbar">
+          {/* Display View Toggle Button */}
+          <div className="mb-6 flex justify-end">
+            <Button
+              onClick={() => setIsDisplayView(true)}
+              className="bg-aurora-purple hover:bg-aurora-bright-purple text-white font-medium flex items-center gap-2"
+              data-testid="button-display-view"
+            >
+              <Monitor className="h-4 w-4" />
+              DisplayView
+            </Button>
+          </div>
+
           <DashboardStats />
           
           {/* Distributor Trends Chart - New chart showing distributor price change rates */}
