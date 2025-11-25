@@ -1,0 +1,88 @@
+You are helping me fix and improve a materials management feature in my app.
+
+You must work AUTONOMOUSLY:
+- Do NOT ask me questions.
+- Do NOT wait for approval.
+- Do NOT restate plans back to me unless I explicitly ask.
+- Make reasonable assumptions, think carefully, and then implement.
+
+BEHAVIORAL RULES (INTERNAL THINKING):
+Before you write or change any code, you must silently:
+1. Parse and fully understand my requirements.
+2. Infer any missing but reasonable details.
+3. Consider at least two different approaches in your head.
+4. Second-guess your first idea: look for flaws, edge cases, and UX pitfalls.
+5. Choose the cleanest, most robust, and most maintainable solution.
+6. Mentally run through test cases (happy path, invalid input, weird edge cases).
+
+Do all of this REASONING INTERNALLY. Do not print this thought process unless I explicitly ask for it. Your output should be only the final code changes and anything absolutely necessary for the app to run.
+
+After you write code, you must internally:
+- Re-scan the code for obvious bugs, missing checks, or inconsistent state handling.
+- Ensure the logic matches the requirements below.
+- Ensure it won’t silently fail.
+
+If you notice conflicts between existing code and these requirements, refactor carefully so behavior matches the requirements.
+
+--------------------------------
+CURRENT PROBLEM / REQUIREMENTS
+--------------------------------
+
+1) “+ Add Material” flow
+- There is a “+ Add Material” button.
+- It opens a screen with a submit button labeled “Update price immediately”.
+- Right now, pressing “Update price immediately” does nothing (no item is added, no price is updated).
+
+REQUIRED BEHAVIOR:
+- This flow must allow the user to add NEW materials that might not exist in the current list.
+- When the user submits via “Update price immediately” in the “+ Add Material” flow:
+  - If the material does NOT exist yet:
+    - Create it.
+    - Add it to the materials list with the specified price and any other required details.
+    - Persist it appropriately (database, file, or in-memory, depending on the app).
+  - If the material name ALREADY exists:
+    - Do NOT silently create a duplicate.
+    - Handle it gracefully:
+      - Prefer either rejecting with a clear error message like “This material already exists. Use the ‘Price Change’ option to update its price.”
+      - Or enforce a rule that all names must be unique and respect that rule in code.
+- The app must give the user clear visual feedback that something happened:
+  - Success: material added, list refreshed, and/or confirmation message.
+  - Failure: clear error message and no broken UI state.
+
+Keep this flow focused on CREATING new materials, not editing existing ones.
+
+2) “Price Change” flow (MUST be separate from “+ Add Material”)
+- There is a separate “Price Change” button.
+- This MUST NOT reuse the same form as “+ Add Material”.
+- The “Price Change” flow assumes the material already exists.
+
+REQUIRED BEHAVIOR:
+- The “Price Change” form must:
+  - Let the user select an existing material.
+    - This can be a dropdown, searchable select, or similar, but it MUST:
+      - Show only existing materials.
+      - Allow the user to clearly pick exactly one material to edit.
+  - Show the current price for the selected material (if available).
+  - Allow the user to input a new price (and any other required fields).
+  - On submit:
+    - Update the price for that specific selected material.
+    - Persist the change.
+    - Update the UI so the new price is reflected wherever materials are displayed.
+  - Provide clear confirmation or error feedback to the user.
+
+Keep this flow focused on EDITING existing materials, not creating new ones.
+
+-------------------
+GENERAL EXPECTATIONS
+-------------------
+- “+ Add Material” = create new items.
+- “Price Change” = modify existing items.
+- No silent failures. Either succeed clearly or fail with a useful message.
+- Keep state, persistence, and UI in sync.
+- Avoid duplicate materials unless the app explicitly supports them and you’ve handled that case safely.
+- Default to behavior that is intuitive for a normal user who doesn’t know the internals.
+
+Remember:
+- Think deeply before changing anything.
+- Second-guess your own logic.
+- Then implement decisively without asking me for review.

@@ -19,8 +19,7 @@ export function HeaderNavigation() {
   });
 
   const openPriceChangeModal = () => {
-    // Trigger the modal open via data attribute click
-    const event = new CustomEvent('openAdminPriceModal');
+    const event = new CustomEvent('openEditPriceModal');
     document.dispatchEvent(event);
   };
 

@@ -240,14 +240,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const material = await storage.createMaterial(validation.data, req.user!.id);
       
-      // Send Slack notification
-      await sendAdminPriceUpdateNotification({
-        materialName: material.name,
-        distributor: material.distributor,
-        location: material.location,
-        newPrice: material.currentPrice,
-        updatedBy: req.user!.name,
-      });
+      // Send Slack notification (best-effort, don't fail request if Slack fails)
+      try {
+        await sendAdminPriceUpdateNotification({
+          materialName: material.name,
+          distributor: material.distributor,
+          location: material.location,
+          newPrice: material.currentPrice,
+          updatedBy: req.user!.name,
+        });
+      } catch (slackError) {
+        console.error('Slack notification failed (non-blocking):', slackError);
+      }
 
       res.status(201).json(material);
     } catch (error) {
@@ -271,16 +275,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const material = await storage.updateMaterial(id, validation.data, req.user!.id);
       
-      // Send Slack notification if price changed
+      // Send Slack notification if price changed (best-effort, don't fail request if Slack fails)
       if (validation.data.currentPrice) {
-        await sendAdminPriceUpdateNotification({
-          materialName: material.name,
-          distributor: material.distributor,
-          location: material.location,
-          newPrice: material.currentPrice,
-          oldPrice: currentMaterial.currentPrice,
-          updatedBy: req.user!.name,
-        });
+        try {
+          await sendAdminPriceUpdateNotification({
+            materialName: material.name,
+            distributor: material.distributor,
+            location: material.location,
+            newPrice: material.currentPrice,
+            oldPrice: currentMaterial.currentPrice,
+            updatedBy: req.user!.name,
+          });
+        } catch (slackError) {
+          console.error('Slack notification failed (non-blocking):', slackError);
+        }
       }
 
       res.json(material);

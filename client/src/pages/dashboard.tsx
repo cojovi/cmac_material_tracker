@@ -12,7 +12,8 @@ import { PerformanceMetrics } from "@/components/dashboard/performance-metrics";
 import { LocationAnalysis } from "@/components/dashboard/location-analysis";
 import { MaterialsDataTable } from "@/components/dashboard/materials-data-table";
 import { PriceChangeRequestForm } from "@/components/dashboard/price-change-request-form";
-import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
+import { AddMaterialModal } from "@/components/dashboard/add-material-modal";
+import { EditPriceModal } from "@/components/dashboard/edit-price-modal";
 import { WallDisplayView } from "@/components/dashboard/wall-display-view";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,8 @@ export default function Dashboard() {
         </main>
       </div>
       
-      <AdminPriceChangeModal />
+      <AddMaterialModal />
+      <EditPriceModal />
     </div>
   );
 }

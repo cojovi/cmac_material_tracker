@@ -4,7 +4,8 @@ import { useLocation } from "wouter";
 import { HeaderNavigation } from "@/components/dashboard/header-navigation";
 import { SidebarNavigation } from "@/components/dashboard/sidebar-navigation";
 import { MaterialsDataTable } from "@/components/dashboard/materials-data-table";
-import { AdminPriceChangeModal } from "@/components/dashboard/admin-price-change-modal";
+import { AddMaterialModal } from "@/components/dashboard/add-material-modal";
+import { EditPriceModal } from "@/components/dashboard/edit-price-modal";
 import { StandardPriceChangeRequest } from "@/components/dashboard/standard-price-change-request";
 import { CSVUploadModal } from "@/components/dashboard/csv-upload-modal";
 import { BulkDataImportModal } from "@/components/dashboard/bulk-data-import-modal";
@@ -76,8 +77,9 @@ export default function Materials() {
                       Import Price History
                     </Button>
                     <Button
-                      data-event="click:openPriceChangeModal"
+                      onClick={() => document.dispatchEvent(new CustomEvent('openAddMaterialModal'))}
                       className="bg-aurora-cyan hover:bg-aurora-cyan/80 text-white border-0"
+                      data-testid="button-add-material"
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Add Material
@@ -97,7 +99,8 @@ export default function Materials() {
         </main>
       </div>
       
-      <AdminPriceChangeModal />
+      <AddMaterialModal />
+      <EditPriceModal />
       {showCSVUpload && (
         <CSVUploadModal 
           isOpen={showCSVUpload}
