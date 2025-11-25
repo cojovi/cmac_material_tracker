@@ -624,20 +624,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const rowNumber = i + 2; // +2 because CSV has header row and arrays are 0-indexed
 
         try {
-          // Auto-generate ticker symbol if missing
-          let tickerSymbol = record.tickerSymbol?.trim();
-          if (!tickerSymbol) {
-            const distributorMap: { [key: string]: string } = {
-              'ABCSupply': 'ABC',
-              'Beacon': 'BCN', 
-              'SRSProducts': 'SRS',
-              'CommercialDistributors': 'CDH',
-              'CommericalDistributors': 'CDH', // Handle typo
-              'Other': 'OTH'
-            };
-            tickerSymbol = distributorMap[record.distributor?.trim()] || 'OTH';
-          }
-
           // Fix common enum value issues
           let location = record.location?.trim();
           if (location === 'OTH') location = 'DFW'; // Default invalid location to DFW
@@ -645,8 +631,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let productCategory = record.productCategory?.trim();
           if (productCategory === 'Garage Doors') productCategory = 'Garage Door';
           
-          let distributor = record.distributor?.trim();
-          if (distributor === 'CommericalDistributors') distributor = 'CommercialDistributors';
+          // Normalize distributor names to match schema enum values
+          let rawDistributor = record.distributor?.trim();
+          const distributorNormalization: { [key: string]: string } = {
+            'ABC Supply': 'ABCSupply',
+            'ABCSupply': 'ABCSupply',
+            'ABC': 'ABCSupply',
+            'Beacon': 'Beacon',
+            'QXO': 'Beacon',
+            'QXO Distribution': 'Beacon',
+            'SRS Products': 'SRSProducts',
+            'SRSProducts': 'SRSProducts',
+            'SRS': 'SRSProducts',
+            'Commercial Distributors': 'CommercialDistributors',
+            'CommercialDistributors': 'CommercialDistributors',
+            'CommericalDistributors': 'CommercialDistributors',
+            'CDH': 'CommercialDistributors',
+            'CDH Materials': 'CommercialDistributors',
+            'Quality Trading House': 'Other',
+            'QTH': 'Other',
+            'Other': 'Other',
+          };
+          const distributor = distributorNormalization[rawDistributor] || 'Other';
+          
+          // Auto-generate ticker symbol based on normalized distributor
+          let tickerSymbol = record.tickerSymbol?.trim();
+          if (!tickerSymbol) {
+            const distributorTickerMap: { [key: string]: string } = {
+              'ABCSupply': 'ABC',
+              'Beacon': 'QXO', 
+              'SRSProducts': 'SRS',
+              'CommercialDistributors': 'CDH',
+              'Other': 'OTH'
+            };
+            tickerSymbol = distributorTickerMap[distributor] || 'OTH';
+          }
 
           // Validate required fields
           const materialData = {

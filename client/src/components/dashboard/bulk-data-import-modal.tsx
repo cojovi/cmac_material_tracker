@@ -149,12 +149,12 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
   const downloadMaterialsTemplate = () => {
     const template = [
       'name,location,manufacturer,productCategory,distributor,currentPrice,tickerSymbol',
-      'Starter Strip,DFW,Atlas,Flashing,ABC Supply,345.00,ABC',
-      'Chimney Flashing,ATL,Malarky,Decking,Quality Trading House,89.75,QTH',
-      'Roofing Underlayment (Felt),OKC,Tri-Built,Underlayment,QXO Distribution,48.90,QXO',
-      'Example Asphalt Shingles,HOU,GAF,Shingle,ABC Supply,23.45,ABC',
-      'Elastomeric Roof Coating,ATX,CertainTeed,Accessory,SRS Products,156.00,SRS',
-      'Gutter Guards,ARK,Owens Corning,Accessory,CDH Materials,94.60,CDH'
+      'Starter Strip,DFW,Atlas,Flashing,ABCSupply,345.00,ABC',
+      'Chimney Flashing,ATL,Malarky,Decking,Other,89.75,OTH',
+      'Roofing Underlayment (Felt),OKC,Tri-Built,Underlayment,Beacon,48.90,QXO',
+      'Example Asphalt Shingles,HOU,GAF,Shingle,ABCSupply,23.45,ABC',
+      'Elastomeric Roof Coating,ATX,CertainTeed,Accessory,SRSProducts,156.00,SRS',
+      'Gutter Guards,ARK,Owens Corning,Accessory,CommercialDistributors,94.60,CDH'
     ].join('\n');
     
     const blob = new Blob([template], { type: 'text/csv' });
