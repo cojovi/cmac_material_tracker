@@ -1,0 +1,8 @@
+materialName,distributor,location,oldPrice,newPrice,changeDate,changeReason
+Starter Strip,ABCSupply,DFW,79.00,84.00,2025-07-05,Market adjustment
+Starter Strip,ABCSupply,DFW,150.00,165.00,2025-07-15,Supply chain costs
+Starter Strip,ABCSupply,DFW,89.50,95.25,2025-08-01,Material cost increase
+Starter Strip,ABCSupply,DFW,92.25,51.11,8/9/2025,Market adjustment
+Starter Strip,ABCSupply,DFW,51.11,59,8/23/2025,Supply chain costs
+Starter Strip,ABCSupply,DFW,59,71,9/4/2025,Material cost increase
+Starter Strip,ABCSupply,DFW,71,99,10/5/2025,Material cost increase

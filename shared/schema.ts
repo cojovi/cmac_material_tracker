@@ -104,8 +104,9 @@ export const insertMaterialSchema = createInsertSchema(materials).omit({
 
 export const insertPriceHistorySchema = createInsertSchema(priceHistory).omit({
   id: true,
-  submittedAt: true,
   approvedAt: true,
+}).extend({
+  submittedAt: z.date().optional(), // Allow optional custom date for historical imports
 });
 
 export const insertPriceChangeRequestSchema = createInsertSchema(priceChangeRequests).omit({

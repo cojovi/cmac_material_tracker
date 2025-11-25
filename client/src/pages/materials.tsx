@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { HeaderNavigation } from "@/components/dashboard/header-navigation";
@@ -22,6 +22,12 @@ export default function Materials() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showPriceHistoryImport, setShowPriceHistoryImport] = useState(false);
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/login");
+    }
+  }, [isLoading, user, setLocation]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -31,7 +37,6 @@ export default function Materials() {
   }
 
   if (!user) {
-    setLocation("/login");
     return null;
   }
 

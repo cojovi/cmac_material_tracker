@@ -35,7 +35,7 @@ export interface IStorage {
 
   // Price history
   getPriceHistory(materialId: number, days?: number): Promise<PriceHistory[]>;
-  addPriceHistory(history: InsertPriceHistory): Promise<PriceHistory>;
+  addPriceHistory(history: InsertPriceHistory & { submittedAt?: Date }): Promise<PriceHistory>;
   createPriceHistory(history: InsertPriceHistory): Promise<PriceHistory>;
   getRecentPriceChanges(limit?: number): Promise<(PriceHistory & { material: Material })[]>;
 
@@ -203,16 +203,19 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async addPriceHistory(history: InsertPriceHistory): Promise<PriceHistory> {
+  async addPriceHistory(history: InsertPriceHistory & { submittedAt?: Date }): Promise<PriceHistory> {
     // Calculate change percentage
     const changePercent = history.oldPrice && history.oldPrice !== '0' 
       ? ((parseFloat(history.newPrice) - parseFloat(history.oldPrice)) / parseFloat(history.oldPrice)) * 100
       : 0;
 
+    const historyDate = history.submittedAt || new Date();
+    
     const result = await db.insert(priceHistory).values({
       ...history,
       changePercent: changePercent.toString(),
-      approvedAt: history.status === 'approved' ? new Date() : null,
+      submittedAt: historyDate,
+      approvedAt: history.status === 'approved' ? historyDate : null,
     }).returning();
     
     return result[0];

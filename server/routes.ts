@@ -180,32 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Materials routes
-  // Single material by ID
-  app.get('/api/materials/:id', requireAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const material = await storage.getMaterialById(id);
-      if (!material) {
-        return res.status(404).json({ message: 'Material not found' });
-      }
-      res.json(material);
-    } catch (error) {
-      console.error('Error fetching material:', error);
-      res.status(500).json({ message: 'Failed to fetch material' });
-    }
-  });
-
-  app.get('/api/materials', requireAuth, async (req, res) => {
-    try {
-      const materials = await storage.getAllMaterials();
-      res.json(materials);
-    } catch (error) {
-      console.error('Error fetching materials:', error);
-      res.status(500).json({ message: 'Failed to fetch materials' });
-    }
-  });
-
+  // Materials routes - IMPORTANT: Specific routes MUST come before :id pattern
   app.get('/api/materials/search', requireAuth, async (req, res) => {
     try {
       const query = req.query.q as string;
@@ -228,6 +203,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching trending materials:', error);
       res.status(500).json({ message: 'Failed to fetch trending materials' });
+    }
+  });
+
+  app.get('/api/materials', requireAuth, async (req, res) => {
+    try {
+      const materials = await storage.getAllMaterials();
+      res.json(materials);
+    } catch (error) {
+      console.error('Error fetching materials:', error);
+      res.status(500).json({ message: 'Failed to fetch materials' });
+    }
+  });
+
+  // Single material by ID - MUST be after specific routes like /search and /trending
+  app.get('/api/materials/:id', requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid material ID' });
+      }
+      const material = await storage.getMaterialById(id);
+      if (!material) {
+        return res.status(404).json({ message: 'Material not found' });
+      }
+      res.json(material);
+    } catch (error) {
+      console.error('Error fetching material:', error);
+      res.status(500).json({ message: 'Failed to fetch material' });
     }
   });
 
@@ -756,6 +759,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         total: records.length,
       };
 
+      // Helper function to parse various date formats
+      const parseDate = (dateStr: string): Date | null => {
+        if (!dateStr) return null;
+        
+        const trimmed = dateStr.trim();
+        
+        // Try YYYY-MM-DD format first
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+          const date = new Date(trimmed + 'T12:00:00Z');
+          if (!isNaN(date.getTime())) return date;
+        }
+        
+        // Try M/D/YYYY or MM/DD/YYYY format
+        const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (slashMatch) {
+          const [, month, day, year] = slashMatch;
+          const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0));
+          if (!isNaN(date.getTime())) return date;
+        }
+        
+        // Fallback: try native Date parsing
+        const date = new Date(trimmed);
+        if (!isNaN(date.getTime())) return date;
+        
+        return null;
+      };
+
       // Process each record
       for (let i = 0; i < records.length; i++) {
         const record = records[i] as any;
@@ -777,7 +807,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
 
-          // Create price history record
+          // Parse the change date from CSV
+          const changeDate = parseDate(record.changeDate);
+          if (!changeDate) {
+            results.errors.push({
+              row: rowNumber,
+              error: `Invalid date format: ${record.changeDate}. Use YYYY-MM-DD or M/D/YYYY format.`,
+            });
+            continue;
+          }
+
+          // Create price history record with the historical date
           await storage.addPriceHistory({
             materialId: material.id,
             oldPrice: record.oldPrice?.toString().trim(),
@@ -786,6 +826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'approved' as const,
             approvedBy: req.user!.id,
             notes: record.changeReason?.trim() || 'Historical data import',
+            submittedAt: changeDate,
           });
           results.success++;
           
