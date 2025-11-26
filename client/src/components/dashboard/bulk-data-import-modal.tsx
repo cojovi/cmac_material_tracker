@@ -9,8 +9,21 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle, AlertCircle, Download, Database, History } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Download, Database, History, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface ImportError {
+  row: number;
+  error: string;
+  data?: Record<string, any>;
+}
+
+interface ImportResult {
+  success: number;
+  errors: ImportError[];
+  total: number;
+}
 
 interface BulkDataImportModalProps {
   isOpen: boolean;
@@ -21,10 +34,11 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
   const [materialsFile, setMaterialsFile] = useState<File | null>(null);
   const [priceHistoryFile, setPriceHistoryFile] = useState<File | null>(null);
   const [uploadResults, setUploadResults] = useState<{
-    materials?: { success: number; errors: any[]; total: number };
-    priceHistory?: { success: number; errors: any[]; total: number };
+    materials?: ImportResult;
+    priceHistory?: ImportResult;
   } | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [hasUnacknowledgedErrors, setHasUnacknowledgedErrors] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -45,16 +59,19 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
       
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: ImportResult) => {
       setUploadResults(prev => ({ ...prev, materials: data }));
       queryClient.invalidateQueries({ queryKey: ["/api/materials"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       
-      toast({
-        title: "Materials Upload Complete",
-        description: `${data.success} materials imported, ${data.errors.length} errors`,
-        variant: data.errors.length === 0 ? "default" : "destructive",
-      });
+      if (data.errors.length > 0) {
+        setHasUnacknowledgedErrors(true);
+      } else {
+        toast({
+          title: "Materials Upload Complete",
+          description: `${data.success} materials imported successfully!`,
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -68,30 +85,34 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
   const priceHistoryUploadMutation = useMutation({
     mutationFn: async (csvFile: File) => {
       const formData = new FormData();
-      formData.append('csv', csvFile);
+      formData.append('file', csvFile);
       
-      const response = await fetch('/api/price-history/bulk-upload', {
+      const response = await fetch('/api/price-history/upload', {
         method: 'POST',
         body: formData,
         credentials: 'include',
       });
       
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed: ${response.statusText}`);
       }
       
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: ImportResult) => {
       setUploadResults(prev => ({ ...prev, priceHistory: data }));
       queryClient.invalidateQueries({ queryKey: ["/api/price-history/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-changes/recent"] });
       
-      toast({
-        title: "Price History Upload Complete", 
-        description: `${data.success} price records imported, ${data.errors.length} errors`,
-        variant: data.errors.length === 0 ? "default" : "destructive",
-      });
+      if (data.errors.length > 0) {
+        setHasUnacknowledgedErrors(true);
+      } else {
+        toast({
+          title: "Price History Upload Complete", 
+          description: `${data.success} price records imported successfully!`,
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -139,6 +160,22 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
   };
 
   const handleClose = () => {
+    if (hasUnacknowledgedErrors) {
+      return;
+    }
+    setMaterialsFile(null);
+    setPriceHistoryFile(null);
+    setUploadResults(null);
+    setUploadProgress(0);
+    onClose();
+  };
+
+  const acknowledgeErrors = () => {
+    setHasUnacknowledgedErrors(false);
+  };
+
+  const handleDismissAndClose = () => {
+    setHasUnacknowledgedErrors(false);
     setMaterialsFile(null);
     setPriceHistoryFile(null);
     setUploadResults(null);
@@ -270,16 +307,67 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
                 </div>
 
                 {uploadResults?.materials && (
-                  <div className="p-4 bg-aurora-navy/20 rounded-lg border border-aurora-green/20">
-                    <div className="flex items-center text-aurora-green mb-2">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      <span className="font-medium">Materials Upload Results</span>
+                  <div className={`p-4 rounded-lg border ${uploadResults.materials.errors.length > 0 ? 'bg-red-950/30 border-red-500/50' : 'bg-aurora-navy/20 border-aurora-green/20'}`}>
+                    <div className={`flex items-center mb-3 ${uploadResults.materials.errors.length > 0 ? 'text-red-400' : 'text-aurora-green'}`}>
+                      {uploadResults.materials.errors.length > 0 ? (
+                        <XCircle className="mr-2 h-5 w-5" />
+                      ) : (
+                        <CheckCircle className="mr-2 h-5 w-5" />
+                      )}
+                      <span className="font-semibold text-lg">Materials Upload Results</span>
                     </div>
-                    <div className="text-gray-300 text-sm">
-                      <p>Total records: {uploadResults.materials.total}</p>
-                      <p>Successfully imported: {uploadResults.materials.success}</p>
-                      <p>Errors: {uploadResults.materials.errors.length}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="bg-aurora-navy/30 rounded p-3 text-center">
+                        <div className="text-2xl font-bold text-white">{uploadResults.materials.total}</div>
+                        <div className="text-gray-400 text-sm">Total Records</div>
+                      </div>
+                      <div className="bg-aurora-green/10 rounded p-3 text-center border border-aurora-green/20">
+                        <div className="text-2xl font-bold text-aurora-green">{uploadResults.materials.success}</div>
+                        <div className="text-gray-400 text-sm">Imported</div>
+                      </div>
+                      <div className={`rounded p-3 text-center border ${uploadResults.materials.errors.length > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-aurora-navy/30 border-gray-600'}`}>
+                        <div className={`text-2xl font-bold ${uploadResults.materials.errors.length > 0 ? 'text-red-400' : 'text-gray-400'}`}>{uploadResults.materials.errors.length}</div>
+                        <div className="text-gray-400 text-sm">Errors</div>
+                      </div>
                     </div>
+
+                    {uploadResults.materials.errors.length > 0 && (
+                      <div className="mt-4">
+                        <div className="flex items-center text-red-400 mb-2">
+                          <AlertCircle className="mr-2 h-4 w-4" />
+                          <span className="font-medium">Failed Line Items - Please review and fix:</span>
+                        </div>
+                        <ScrollArea className="h-48 rounded-md border border-red-500/30 bg-red-950/20 p-3">
+                          <div className="space-y-2">
+                            {uploadResults.materials.errors.map((error, index) => (
+                              <div key={index} className="p-2 bg-red-950/40 rounded border border-red-500/20">
+                                <div className="flex items-start">
+                                  <span className="text-red-400 font-mono text-xs bg-red-500/20 px-2 py-0.5 rounded mr-2 shrink-0">
+                                    Row {error.row}
+                                  </span>
+                                  <span className="text-gray-300 text-sm">{error.error}</span>
+                                </div>
+                                {error.data && (
+                                  <div className="mt-1 text-xs text-gray-500 font-mono truncate">
+                                    {JSON.stringify(error.data)}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        <div className="mt-3 flex justify-end">
+                          <Button
+                            onClick={acknowledgeErrors}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            data-testid="button-acknowledge-materials-errors"
+                          >
+                            I've Noted These Errors - Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -371,16 +459,67 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
                 </div>
 
                 {uploadResults?.priceHistory && (
-                  <div className="p-4 bg-aurora-navy/20 rounded-lg border border-aurora-purple/20">
-                    <div className="flex items-center text-aurora-purple mb-2">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      <span className="font-medium">Price History Upload Results</span>
+                  <div className={`p-4 rounded-lg border ${uploadResults.priceHistory.errors.length > 0 ? 'bg-red-950/30 border-red-500/50' : 'bg-aurora-navy/20 border-aurora-purple/20'}`}>
+                    <div className={`flex items-center mb-3 ${uploadResults.priceHistory.errors.length > 0 ? 'text-red-400' : 'text-aurora-purple'}`}>
+                      {uploadResults.priceHistory.errors.length > 0 ? (
+                        <XCircle className="mr-2 h-5 w-5" />
+                      ) : (
+                        <CheckCircle className="mr-2 h-5 w-5" />
+                      )}
+                      <span className="font-semibold text-lg">Price History Upload Results</span>
                     </div>
-                    <div className="text-gray-300 text-sm">
-                      <p>Total records: {uploadResults.priceHistory.total}</p>
-                      <p>Successfully imported: {uploadResults.priceHistory.success}</p>
-                      <p>Errors: {uploadResults.priceHistory.errors.length}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="bg-aurora-navy/30 rounded p-3 text-center">
+                        <div className="text-2xl font-bold text-white">{uploadResults.priceHistory.total}</div>
+                        <div className="text-gray-400 text-sm">Total Records</div>
+                      </div>
+                      <div className="bg-aurora-purple/10 rounded p-3 text-center border border-aurora-purple/20">
+                        <div className="text-2xl font-bold text-aurora-purple">{uploadResults.priceHistory.success}</div>
+                        <div className="text-gray-400 text-sm">Imported</div>
+                      </div>
+                      <div className={`rounded p-3 text-center border ${uploadResults.priceHistory.errors.length > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-aurora-navy/30 border-gray-600'}`}>
+                        <div className={`text-2xl font-bold ${uploadResults.priceHistory.errors.length > 0 ? 'text-red-400' : 'text-gray-400'}`}>{uploadResults.priceHistory.errors.length}</div>
+                        <div className="text-gray-400 text-sm">Errors</div>
+                      </div>
                     </div>
+
+                    {uploadResults.priceHistory.errors.length > 0 && (
+                      <div className="mt-4">
+                        <div className="flex items-center text-red-400 mb-2">
+                          <AlertCircle className="mr-2 h-4 w-4" />
+                          <span className="font-medium">Failed Line Items - Please review and fix:</span>
+                        </div>
+                        <ScrollArea className="h-48 rounded-md border border-red-500/30 bg-red-950/20 p-3">
+                          <div className="space-y-2">
+                            {uploadResults.priceHistory.errors.map((error, index) => (
+                              <div key={index} className="p-2 bg-red-950/40 rounded border border-red-500/20">
+                                <div className="flex items-start">
+                                  <span className="text-red-400 font-mono text-xs bg-red-500/20 px-2 py-0.5 rounded mr-2 shrink-0">
+                                    Row {error.row}
+                                  </span>
+                                  <span className="text-gray-300 text-sm">{error.error}</span>
+                                </div>
+                                {error.data && (
+                                  <div className="mt-1 text-xs text-gray-500 font-mono truncate">
+                                    {JSON.stringify(error.data)}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        <div className="mt-3 flex justify-end">
+                          <Button
+                            onClick={acknowledgeErrors}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            data-testid="button-acknowledge-history-errors"
+                          >
+                            I've Noted These Errors - Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -408,11 +547,18 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          {hasUnacknowledgedErrors && (
+            <p className="text-red-400 text-sm self-center mr-4">
+              Please dismiss the errors above before closing
+            </p>
+          )}
           <Button
             variant="outline"
-            onClick={handleClose}
-            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+            onClick={handleDismissAndClose}
+            disabled={hasUnacknowledgedErrors}
+            className={`border-gray-600 text-gray-300 hover:bg-gray-700 ${hasUnacknowledgedErrors ? 'opacity-50 cursor-not-allowed' : ''}`}
+            data-testid="button-close-import-modal"
           >
             Close
           </Button>
