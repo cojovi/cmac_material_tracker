@@ -84,13 +84,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Multer configuration for file uploads
   const upload = multer({ storage: multer.memoryStorage() });
 
+  // Trust proxy for production (Replit uses reverse proxy)
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction) {
+    app.set('trust proxy', 1);
+  }
+
   // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
+    proxy: isProduction,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
+      httpOnly: true,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));
@@ -605,9 +614,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CSV Upload route
   app.post("/api/materials/bulk-upload", requireAdmin, upload.single('csv'), async (req, res) => {
     try {
+      console.log('[bulk-upload] Starting materials bulk upload, user:', req.user?.email);
+      
       if (!req.file) {
+        console.log('[bulk-upload] No file provided');
         return res.status(400).json({ error: "No CSV file provided" });
       }
+      
+      console.log('[bulk-upload] File received:', req.file.originalname, 'size:', req.file.size);
 
       const csvContent = req.file.buffer.toString('utf-8');
       
@@ -715,8 +729,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(results);
       
     } catch (error) {
-      console.error("CSV upload error:", error);
-      res.status(500).json({ error: "Internal server error during CSV upload" });
+      console.error("[bulk-upload] CSV upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Internal server error during CSV upload";
+      res.status(500).json({ error: errorMessage });
     }
   });
 
@@ -735,9 +750,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Price history upload endpoint  
   app.post("/api/price-history/upload", requireAdmin, upload.single('file'), async (req, res) => {
     try {
+      console.log('[price-history-upload] Starting price history upload, user:', req.user?.email);
+      
       if (!req.file) {
+        console.log('[price-history-upload] No file provided');
         return res.status(400).json({ error: "No CSV file provided" });
       }
+      
+      console.log('[price-history-upload] File received:', req.file.originalname, 'size:', req.file.size);
 
       const csvContent = req.file.buffer.toString('utf-8');
       
