@@ -655,6 +655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           let productCategory = record.productCategory?.trim();
           if (productCategory === 'Garage Doors') productCategory = 'Garage Door';
+          if (!productCategory || productCategory === '') productCategory = 'Other';
           
           // Normalize distributor names to match schema enum values
           let rawDistributor = record.distributor?.trim();

@@ -160,13 +160,12 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
   };
 
   const handleClose = () => {
-    if (hasUnacknowledgedErrors) {
-      return;
-    }
+    // Always allow closing - never lock the user in
     setMaterialsFile(null);
     setPriceHistoryFile(null);
     setUploadResults(null);
     setUploadProgress(0);
+    setHasUnacknowledgedErrors(false);
     onClose();
   };
 
