@@ -657,6 +657,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (productCategory === 'Garage Doors') productCategory = 'Garage Door';
           if (!productCategory || productCategory === '') productCategory = 'Other';
           
+          // Handle empty manufacturer - default to "Other"
+          let manufacturer = record.manufacturer?.trim();
+          if (!manufacturer || manufacturer === '') manufacturer = 'Other';
+          
           // Normalize distributor names to match schema enum values
           let rawDistributor = record.distributor?.trim();
           const distributorNormalization: { [key: string]: string } = {
@@ -697,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const materialData = {
             name: record.name?.trim(),
             location: location,
-            manufacturer: record.manufacturer?.trim(),
+            manufacturer: manufacturer,
             productCategory: productCategory,
             distributor: distributor,
             currentPrice: record.currentPrice?.toString().trim(),
