@@ -651,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Fix common enum value issues
           let location = record.location?.trim();
-          if (location === 'OTH') location = 'DFW'; // Default invalid location to DFW
+          if (!location || location === '' || location === 'OTH') location = 'DFW'; // Default invalid/empty location to DFW
           
           let productCategory = record.productCategory?.trim();
           if (productCategory === 'Garage Doors') productCategory = 'Garage Door';

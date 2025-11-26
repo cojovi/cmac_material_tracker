@@ -547,16 +547,10 @@ export function BulkDataImportModal({ isOpen, onClose }: BulkDataImportModalProp
         </Tabs>
 
         <div className="flex justify-end gap-3">
-          {hasUnacknowledgedErrors && (
-            <p className="text-red-400 text-sm self-center mr-4">
-              Please dismiss the errors above before closing
-            </p>
-          )}
           <Button
             variant="outline"
-            onClick={handleDismissAndClose}
-            disabled={hasUnacknowledgedErrors}
-            className={`border-gray-600 text-gray-300 hover:bg-gray-700 ${hasUnacknowledgedErrors ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={handleClose}
+            className="border-gray-600 text-gray-300 hover:bg-gray-700"
             data-testid="button-close-import-modal"
           >
             Close
