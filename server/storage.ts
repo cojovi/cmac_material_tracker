@@ -1,10 +1,9 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, desc, sql, and, gte, count, avg } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import {
-  users, materials, priceHistory, priceChangeRequests,
-  type User, type InsertUser, type Material, type InsertMaterial,
+  profiles, materials, priceHistory, priceChangeRequests,
+  type Profile, type InsertProfile, type Material, type InsertMaterial,
   type PriceHistory, type InsertPriceHistory, type PriceChangeRequest,
   type InsertPriceChangeRequest, type MaterialWithHistory, type DashboardStats,
   type LocationPerformance, type DistributorPerformance, DISTRIBUTORS
@@ -18,17 +17,16 @@ const sql_client = neon(process.env.DATABASE_URL);
 const db = drizzle(sql_client);
 
 export interface IStorage {
-  // User management
-  getUserById(id: number): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  validatePassword(email: string, password: string): Promise<User | null>;
+  // Profile management (replaces User management)
+  getProfileById(id: string): Promise<Profile | undefined>;
+  getProfileByEmail(email: string): Promise<Profile | undefined>;
+  createProfile(profile: InsertProfile): Promise<Profile>;
 
   // Material management
   getAllMaterials(): Promise<MaterialWithHistory[]>;
   getMaterialById(id: number): Promise<Material | undefined>;
-  createMaterial(material: InsertMaterial, userId: number): Promise<Material>;
-  updateMaterial(id: number, material: Partial<InsertMaterial>, userId: number): Promise<Material>;
+  createMaterial(material: InsertMaterial, userId: string): Promise<Material>;
+  updateMaterial(id: number, material: Partial<InsertMaterial>, userId: string): Promise<Material>;
   deleteMaterial(id: number): Promise<boolean>;
   searchMaterials(query: string): Promise<Material[]>;
   findMaterialByDetails(name: string, distributor: string, location: string): Promise<Material | undefined>;
@@ -41,11 +39,11 @@ export interface IStorage {
 
   // Price change requests
   createPriceChangeRequest(request: InsertPriceChangeRequest): Promise<PriceChangeRequest>;
-  getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: User })[]>;
+  getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: Profile })[]>;
   updatePriceChangeRequest(id: number, updates: Partial<PriceChangeRequest>): Promise<PriceChangeRequest>;
   updatePriceChangeRequestStatus(id: number, status: string, reviewedBy?: string): Promise<PriceChangeRequest | undefined>;
   getMaterialByName(name: string): Promise<Material | undefined>;
-  updateMaterialPrice(id: number, newPrice: number, updatedBy: number): Promise<Material>;
+  updateMaterialPrice(id: number, newPrice: number, updatedBy: string): Promise<Material>;
 
   // Dashboard analytics
   getDashboardStats(): Promise<DashboardStats>;
@@ -55,31 +53,19 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUserById(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  async getProfileById(id: string): Promise<Profile | undefined> {
+    const result = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
     return result[0];
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  async getProfileByEmail(email: string): Promise<Profile | undefined> {
+    const result = await db.select().from(profiles).where(eq(profiles.email, email)).limit(1);
     return result[0];
   }
 
-  async createUser(user: InsertUser): Promise<User> {
-    const hashedPassword = await bcrypt.hash(user.password, 12);
-    const result = await db.insert(users).values({
-      ...user,
-      password: hashedPassword,
-    }).returning();
+  async createProfile(profile: InsertProfile): Promise<Profile> {
+    const result = await db.insert(profiles).values(profile).returning();
     return result[0];
-  }
-
-  async validatePassword(email: string, password: string): Promise<User | null> {
-    const user = await this.getUserByEmail(email);
-    if (!user) return null;
-    
-    const isValid = await bcrypt.compare(password, user.password);
-    return isValid ? user : null;
   }
 
   async getAllMaterials(): Promise<MaterialWithHistory[]> {
@@ -125,7 +111,7 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async createMaterial(material: InsertMaterial, userId: number): Promise<Material> {
+  async createMaterial(material: InsertMaterial, userId: string): Promise<Material> {
     const tickerSymbol = DISTRIBUTORS[material.distributor as keyof typeof DISTRIBUTORS];
     const result = await db.insert(materials).values({
       ...material,
@@ -135,7 +121,7 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateMaterial(id: number, materialData: Partial<InsertMaterial>, userId: number): Promise<Material> {
+  async updateMaterial(id: number, materialData: Partial<InsertMaterial>, userId: string): Promise<Material> {
     // Get current material for price history
     const currentMaterial = await this.getMaterialById(id);
     if (!currentMaterial) {
@@ -143,7 +129,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const updates: any = { ...materialData, updatedBy: userId };
-    
+
     // Update ticker symbol if distributor changed
     if (materialData.distributor) {
       updates.tickerSymbol = DISTRIBUTORS[materialData.distributor as keyof typeof DISTRIBUTORS];
@@ -152,7 +138,7 @@ export class DatabaseStorage implements IStorage {
     // If price is being updated, store previous price
     if (materialData.currentPrice) {
       updates.previousPrice = currentMaterial.currentPrice;
-      
+
       // Add to price history
       await this.addPriceHistory({
         materialId: id,
@@ -167,7 +153,7 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(materials.id, id))
       .returning();
-    
+
     return result[0];
   }
 
@@ -267,7 +253,7 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: User })[]> {
+  async getPriceChangeRequests(status?: string): Promise<(PriceChangeRequest & { submittedUser: Profile })[]> {
     const baseQuery = db
       .select({
         id: priceChangeRequests.id,
@@ -282,10 +268,10 @@ export class DatabaseStorage implements IStorage {
         reviewedAt: priceChangeRequests.reviewedAt,
         notes: priceChangeRequests.notes,
         slackMessageTs: priceChangeRequests.slackMessageTs,
-        submittedUser: users,
+        submittedUser: profiles,
       })
       .from(priceChangeRequests)
-      .innerJoin(users, eq(priceChangeRequests.submittedBy, users.id));
+      .innerJoin(profiles, eq(priceChangeRequests.submittedBy, profiles.id));
 
     if (status) {
       const results = await baseQuery
@@ -441,10 +427,10 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async updateMaterialPrice(id: number, newPrice: number, updatedBy: number): Promise<Material> {
+  async updateMaterialPrice(id: number, newPrice: number, updatedBy: string): Promise<Material> {
     // Get current material to store previous price
     const currentMaterial = await this.getMaterialById(id);
-    
+
     // Update the material
     const result = await db.update(materials)
       .set({

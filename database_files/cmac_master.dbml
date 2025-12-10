@@ -1,0 +1,145 @@
+// CMAC Master Database Schema
+// Generated from cmac_master.db
+
+
+Table acculynx_contacts {
+  id integer [pk]
+  acculynx_id text [not null]
+  first_name text
+  last_name text
+  full_name text
+  email text
+  phone text
+  mobile_phone text
+  address_line1 text
+  address_line2 text
+  city text
+  state text
+  zip_code text
+  company_name text
+  created_at text [default: CURRENT_TIMESTAMP]
+  updated_at text [default: CURRENT_TIMESTAMP]
+  last_synced_at text [default: CURRENT_TIMESTAMP]
+}
+
+Table acculynx_jobs {
+  id integer [pk]
+  acculynx_id text [not null]
+  job_name text
+  job_number text
+  milestone text
+  status text
+  status_id integer
+  contact_id integer
+  assigned_to_user_id text
+  assigned_to_user_name text
+  created_date text
+  modified_date text
+  milestone_date text
+  address_line1 text
+  address_line2 text
+  city text
+  state text
+  zip_code text
+  latitude number
+  longitude number
+  job_type text
+  sales_rep text
+  estimator text
+  project_manager text
+  insurance_company text
+  claim_number text
+  deductible number
+  total_amount number
+  notes text
+  raw_data text
+  created_at text [default: CURRENT_TIMESTAMP]
+  updated_at text [default: CURRENT_TIMESTAMP]
+  last_synced_at text [default: CURRENT_TIMESTAMP]
+  col_status_id [ref: > acculynx_statuses.id]
+  col_contact_id [ref: > acculynx_contacts.id]
+}
+
+Table acculynx_statuses {
+  id integer [pk]
+  acculynx_id text [not null]
+  milestone_id integer
+  name text [not null]
+  display_order integer
+  created_at text [default: CURRENT_TIMESTAMP]
+  updated_at text [default: CURRENT_TIMESTAMP]
+  col_milestone_id [ref: > acculynx_workflow_milestones.id]
+}
+
+Table acculynx_workflow_milestones {
+  id integer [pk]
+  acculynx_id text [not null]
+  name text [not null]
+  display_order integer
+  created_at text [default: CURRENT_TIMESTAMP]
+  updated_at text [default: CURRENT_TIMESTAMP]
+}
+
+Table assignments {
+  builder_id integer [pk]
+  role_id integer [pk]
+  employee_id integer [not null]
+  source text
+  col_employee_id [ref: > employees.id]
+  col_role_id [ref: > roles.id]
+  col_builder_id [ref: > builders.id]
+}
+
+Table builder_contacts {
+  id integer [pk]
+  builder_id integer [not null]
+  role text [not null]
+  full_name text
+  email text
+  phone text
+  col_builder_id [ref: > builders.id]
+}
+
+Table builders {
+  id integer [pk]
+  name text [not null]
+}
+
+Table communities {
+  id integer [pk]
+  builder_id integer [not null]
+  name text [not null]
+  city text
+  state text
+  bolt_id integer
+  office text
+  col_builder_id [ref: > builders.id]
+}
+
+Table employees {
+  id integer [pk]
+  full_name text [not null]
+  team text [not null] [default: 'CMAC']
+  email text
+  phone text
+}
+
+Table materials {
+  id integer [pk]
+  name text [not null]
+  location text
+  manufacturer text
+  product_category text
+  distributor text
+  ticker_symbol text
+  current_price number
+  previous_price number
+  last_updated text
+  updated_by integer
+}
+
+Table roles {
+  id integer [pk]
+  name text [not null]
+  category text
+}

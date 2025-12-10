@@ -1,19 +1,17 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { storage } from "./storage";
-import { 
+import { supabaseAdmin } from "./supabase";
+import {
   insertMaterialSchema, insertPriceChangeRequestSchema, loginSchema,
-  type User, type Material, type PriceChangeRequest 
+  type User, type Material, type PriceChangeRequest
 } from "@shared/schema";
-import { 
-  sendPriceChangeRequestNotification, 
+import {
+  sendPriceChangeRequestNotification,
   sendPriceChangeApprovalNotification,
-  sendAdminPriceUpdateNotification 
+  sendAdminPriceUpdateNotification
 } from "./services/slack";
 import { WebClient } from "@slack/web-api";
 import { z } from "zod";
@@ -27,54 +25,75 @@ function calculatePercentageChange(oldPrice: number, newPrice: number): number {
 declare global {
   namespace Express {
     interface User {
-      id: number;
+      id: string; // Changed from number to string (UUID)
       email: string;
       role: string;
       name: string;
     }
+    interface Request {
+      supabaseAccessToken?: string;
+    }
   }
 }
 
-// Passport configuration
-passport.use(new LocalStrategy(
-  { usernameField: 'email' },
-  async (email, password, done) => {
-    try {
-      const user = await storage.validatePassword(email, password);
-      if (user) {
-        return done(null, user);
-      }
-      return done(null, false, { message: 'Invalid credentials' });
-    } catch (error) {
-      return done(error);
-    }
-  }
-));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id: number, done) => {
+// Middleware to extract and verify Supabase user from JWT
+const extractSupabaseUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await storage.getUserById(id);
-    done(null, user || false);
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(); // No token, continue without user (some routes don't require auth)
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    req.supabaseAccessToken = token;
+
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+    if (error || !user) {
+      console.error('Token verification failed:', error?.message);
+      return next(); // Invalid token, continue without user
+    }
+
+    // Fetch user profile from database
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('role, name')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('Profile fetch failed:', profileError?.message);
+      return next(); // Profile not found, continue without user
+    }
+
+    // Attach user to request
+    req.user = {
+      id: user.id,
+      email: user.email!,
+      role: profile.role,
+      name: profile.name,
+    };
+
+    next();
   } catch (error) {
-    done(error);
+    console.error('Error in extractSupabaseUser middleware:', error);
+    next(); // Continue without user on error
   }
-});
+};
 
 // Middleware to check if user is authenticated
-const requireAuth = (req: any, res: any, next: any) => {
-  if (req.isAuthenticated()) {
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user) {
     return next();
   }
   res.status(401).json({ message: 'Authentication required' });
 };
 
 // Middleware to check if user is admin
-const requireAdmin = (req: any, res: any, next: any) => {
-  if (req.isAuthenticated() && req.user.role === 'admin') {
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user && req.user.role === 'admin') {
     return next();
   }
   res.status(403).json({ message: 'Admin access required' });
@@ -84,78 +103,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Multer configuration for file uploads
   const upload = multer({ storage: multer.memoryStorage() });
 
-  // Trust proxy for production (Replit uses reverse proxy)
-  const isProduction = process.env.NODE_ENV === 'production';
-  if (isProduction) {
-    app.set('trust proxy', 1);
-  }
-
-  // Session configuration
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    proxy: isProduction,
-    cookie: {
-      secure: isProduction,
-      httpOnly: true,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // Apply Supabase user extraction middleware globally
+  app.use(extractSupabaseUser);
 
   // Auth routes
-  app.post('/api/auth/login', (req, res, next) => {
+  app.post('/api/auth/login', async (req, res) => {
     const validation = loginSchema.safeParse(req.body);
     if (!validation.success) {
       return res.status(400).json({ message: 'Invalid input', errors: validation.error.errors });
     }
 
-    passport.authenticate('local', (err: any, user: User | false, info: any) => {
-      if (err) {
-        return res.status(500).json({ message: 'Authentication error' });
-      }
-      if (!user) {
-        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
-      }
-      
-      req.logIn(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: 'Login error' });
-        }
-        res.json({ 
-          user: { 
-            id: user.id, 
-            email: user.email, 
-            role: user.role, 
-            name: user.name 
-          } 
-        });
+    try {
+      const { email, password } = validation.data;
+
+      // Sign in with Supabase
+      const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password,
       });
-    })(req, res, next);
+
+      if (error || !data.user || !data.session) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('role, name')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        return res.status(500).json({ message: 'Failed to fetch user profile' });
+      }
+
+      res.json({
+        user: {
+          id: data.user.id,
+          email: data.user.email!,
+          role: profile.role,
+          name: profile.name,
+        },
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+        },
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Authentication error' });
+    }
   });
 
-  app.post('/api/auth/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Logout error' });
+  app.post('/api/auth/logout', async (req, res) => {
+    try {
+      if (req.supabaseAccessToken) {
+        await supabaseAdmin.auth.signOut(req.supabaseAccessToken);
       }
       res.json({ message: 'Logged out successfully' });
-    });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ message: 'Logout error' });
+    }
   });
 
   app.get('/api/auth/me', requireAuth, (req, res) => {
-    res.json({ 
-      user: { 
-        id: req.user!.id, 
-        email: req.user!.email, 
-        role: req.user!.role, 
-        name: req.user!.name 
-      } 
+    res.json({
+      user: {
+        id: req.user!.id,
+        email: req.user!.email,
+        role: req.user!.role,
+        name: req.user!.name
+      }
     });
+  });
+
+  // Optional: Signup route for creating new users
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const { email, password, name, role = 'user' } = req.body;
+
+      if (!email || !password || !name) {
+        return res.status(400).json({ message: 'Email, password, and name are required' });
+      }
+
+      // Create user with Supabase Auth
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+      if (error || !data.user) {
+        return res.status(400).json({ message: error?.message || 'Failed to create user' });
+      }
+
+      // Create user profile
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email,
+          name,
+          role,
+        });
+
+      if (profileError) {
+        // Rollback user creation if profile creation fails
+        await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+        return res.status(500).json({ message: 'Failed to create user profile' });
+      }
+
+      res.status(201).json({
+        user: {
+          id: data.user.id,
+          email: data.user.email!,
+          name,
+          role,
+        },
+      });
+    } catch (error) {
+      console.error('Signup error:', error);
+      res.status(500).json({ message: 'Signup error' });
+    }
   });
 
   // Dashboard stats
@@ -251,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const material = await storage.createMaterial(validation.data, req.user!.id);
-      
+
       // Send Slack notification (best-effort, don't fail request if Slack fails)
       try {
         await sendAdminPriceUpdateNotification({
@@ -286,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const material = await storage.updateMaterial(id, validation.data, req.user!.id);
-      
+
       // Send Slack notification if price changed (best-effort, don't fail request if Slack fails)
       if (validation.data.currentPrice) {
         try {
@@ -317,9 +388,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(materialId)) {
         return res.status(400).json({ message: 'Invalid material ID' });
       }
-      
+
       const timeRange = req.params.timeRange || req.query.timeRange as string || '3m';
-      
+
       // Convert time range to days
       let days = 90; // Default 3 months
       switch (timeRange) {
@@ -329,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case '6m': days = 180; break;
         case '1y': days = 365; break;
       }
-      
+
       const history = await storage.getPriceHistory(materialId, days);
       res.json(history);
     } catch (error) {
@@ -344,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid material ID' });
       }
-      
+
       const days = parseInt(req.query.days as string) || 30;
       const history = await storage.getPriceHistory(id, days);
       res.json(history);
@@ -370,70 +441,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Received Slack interactive request');
     console.log('Headers:', req.headers);
     console.log('Body:', req.body);
-    
+
     try {
       // Respond immediately to avoid timeout
       res.status(200).send('OK');
-      
+
       // Check if payload exists
       if (!req.body.payload) {
         console.error('No payload in request body');
         return;
       }
-      
+
       // Parse the payload from form data
       const payload = JSON.parse(req.body.payload);
       console.log('Parsed payload:', JSON.stringify(payload, null, 2));
-      
+
       if (payload.type === 'block_actions') {
         const action = payload.actions[0];
         const actionId = action.action_id;
         const value = action.value;
-        
+
         if (actionId === 'approve_price_change' || actionId === 'reject_price_change') {
           const [actionType, requestId] = value.split('_');
           const status = actionType === 'approve' ? 'approved' : 'rejected';
-          
+
+          // Get an admin user for automated approvals from Slack
+          const adminUser = await storage.getUserByEmail('codyv@cmacroofing.com');
+          const adminUserId = adminUser?.id;
+
+          if (!adminUserId) {
+            console.error('Admin user not found for Slack approval');
+            return;
+          }
+
           // Update the request status
           const updatedRequest = await storage.updatePriceChangeRequestStatus(
-            parseInt(requestId), 
+            parseInt(requestId),
             status,
             payload.user.name // Slack user name for logging
           );
-          
+
           if (updatedRequest && status === 'approved') {
             // If approved, update the material price
-            console.log(`🔍 Looking for material: "${updatedRequest.materialName}" with current price: "${updatedRequest.currentPrice}"`);
-            
+            console.log(`Looking for material: "${updatedRequest.materialName}" with current price: "${updatedRequest.currentPrice}"`);
+
             // Try to find material by name and current price first (more accurate)
-            let material = updatedRequest.currentPrice 
+            let material = updatedRequest.currentPrice
               ? await storage.findMaterialByNameAndPrice(updatedRequest.materialName, updatedRequest.currentPrice)
               : null;
-            
+
             // Fallback to name-only search
             if (!material) {
               material = await storage.getMaterialByName(updatedRequest.materialName);
             }
-            
-            console.log('🔍 Found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
-            
+
+            console.log('Found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
+
             if (material) {
-              // Get an admin user for automated approvals from Slack
-              const adminUser = await storage.getUserByEmail('codyv@cmacroofing.com');
-              const adminUserId = adminUser?.id || 2; // Fallback to user ID 2
-              console.log(`💰 Updating material ID ${material.id} price from ${material.currentPrice} to ${updatedRequest.requestedPrice}`);
-              
+              console.log(`Updating material ID ${material.id} price from ${material.currentPrice} to ${updatedRequest.requestedPrice}`);
+
               try {
                 await storage.updateMaterialPrice(
                   material.id,
                   parseFloat(updatedRequest.requestedPrice),
                   adminUserId
                 );
-                console.log(`✅ Successfully updated material price for ${material.name}`);
+                console.log(`Successfully updated material price for ${material.name}`);
               } catch (error) {
-                console.error(`❌ Failed to update material price:`, error);
+                console.error(`Failed to update material price:`, error);
               }
-              
+
               // Send approval notification
               await sendPriceChangeApprovalNotification({
                 materialName: updatedRequest.materialName,
@@ -444,12 +521,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
           }
-          
+
           // Send a follow-up message to the channel
-          const responseText = status === 'approved' 
-            ? `✅ Price change approved by ${payload.user.name || 'Admin'}`
-            : `❌ Price change rejected by ${payload.user.name || 'Admin'}`;
-            
+          const responseText = status === 'approved'
+            ? `Price change approved by ${payload.user.name || 'Admin'}`
+            : `Price change rejected by ${payload.user.name || 'Admin'}`;
+
           // Send follow-up message using Slack API
           if (process.env.SLACK_BOT_TOKEN) {
             const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
@@ -477,7 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         submittedBy: req.user!.id,
       });
-      
+
       if (!validation.success) {
         console.error('Price change request validation failed:', validation.error.errors);
         console.error('Request body:', req.body);
@@ -485,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const request = await storage.createPriceChangeRequest(validation.data);
-      
+
       // Send Slack notification
       const messageTs = await sendPriceChangeRequestNotification({
         id: request.id,
@@ -529,35 +606,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update the material price when approved manually from dashboard
-      console.log(`🔍 Manual approval: Looking for material: "${request.materialName}" with current price: "${request.currentPrice}"`);
-      
+      console.log(`Manual approval: Looking for material: "${request.materialName}" with current price: "${request.currentPrice}"`);
+
       // Try to find material by name and current price first (more accurate)
-      let material = request.currentPrice 
+      let material = request.currentPrice
         ? await storage.findMaterialByNameAndPrice(request.materialName, request.currentPrice)
         : null;
-      
+
       // Fallback to name-only search
       if (!material) {
         material = await storage.getMaterialByName(request.materialName);
       }
-      
-      console.log('🔍 Manual approval found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
-      
+
+      console.log('Manual approval found material:', material ? `ID: ${material.id}, Name: ${material.name}, Current Price: ${material.currentPrice}` : 'NOT FOUND');
+
       if (material) {
-        console.log(`💰 Manual approval: Updating material ID ${material.id} price from ${material.currentPrice} to ${request.requestedPrice}`);
-        
+        console.log(`Manual approval: Updating material ID ${material.id} price from ${material.currentPrice} to ${request.requestedPrice}`);
+
         try {
           await storage.updateMaterialPrice(
             material.id,
             parseFloat(request.requestedPrice),
             req.user!.id
           );
-          console.log(`✅ Manual approval: Successfully updated material price for ${material.name}`);
+          console.log(`Manual approval: Successfully updated material price for ${material.name}`);
         } catch (error) {
-          console.error(`❌ Manual approval: Failed to update material price:`, error);
+          console.error(`Manual approval: Failed to update material price:`, error);
         }
       } else {
-        console.error(`❌ Manual approval: Material not found: "${request.materialName}"`);
+        console.error(`Manual approval: Material not found: "${request.materialName}"`);
       }
 
       // Send approval notification
@@ -596,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const { notes } = req.body;
-      
+
       const request = await storage.updatePriceChangeRequest(id, {
         status: 'rejected',
         reviewedBy: req.user!.id,
@@ -615,16 +692,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/materials/bulk-upload", requireAdmin, upload.single('csv'), async (req, res) => {
     try {
       console.log('[bulk-upload] Starting materials bulk upload, user:', req.user?.email);
-      
+
       if (!req.file) {
         console.log('[bulk-upload] No file provided');
         return res.status(400).json({ error: "No CSV file provided" });
       }
-      
+
       console.log('[bulk-upload] File received:', req.file.originalname, 'size:', req.file.size);
 
       const csvContent = req.file.buffer.toString('utf-8');
-      
+
       // Parse CSV
       let records;
       try {
@@ -652,15 +729,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fix common enum value issues
           let location = record.location?.trim();
           if (!location || location === '' || location === 'OTH') location = 'DFW'; // Default invalid/empty location to DFW
-          
+
           let productCategory = record.productCategory?.trim();
           if (productCategory === 'Garage Doors') productCategory = 'Garage Door';
           if (!productCategory || productCategory === '') productCategory = 'Other';
-          
+
           // Handle empty manufacturer - default to "Other"
           let manufacturer = record.manufacturer?.trim();
           if (!manufacturer || manufacturer === '') manufacturer = 'Other';
-          
+
           // Normalize distributor names to match schema enum values
           let rawDistributor = record.distributor?.trim();
           const distributorNormalization: { [key: string]: string } = {
@@ -683,13 +760,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Other': 'Other',
           };
           const distributor = distributorNormalization[rawDistributor] || 'Other';
-          
+
           // Auto-generate ticker symbol based on normalized distributor
           let tickerSymbol = record.tickerSymbol?.trim();
           if (!tickerSymbol) {
             const distributorTickerMap: { [key: string]: string } = {
               'ABCSupply': 'ABC',
-              'Beacon': 'QXO', 
+              'Beacon': 'QXO',
               'SRSProducts': 'SRS',
               'CommercialDistributors': 'CDH',
               'Other': 'OTH'
@@ -710,20 +787,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Validate using Zod schema
           const validatedData = insertMaterialSchema.parse(materialData);
-          
+
           // Create material
           await storage.createMaterial(validatedData, req.user!.id);
           results.success++;
-          
+
         } catch (error) {
           let errorMessage = "Unknown error";
-          
+
           if (error instanceof z.ZodError) {
             errorMessage = error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
           } else if (error instanceof Error) {
             errorMessage = error.message;
           }
-          
+
           results.errors.push({
             row: rowNumber,
             error: errorMessage,
@@ -732,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(results);
-      
+
     } catch (error) {
       console.error("[bulk-upload] CSV upload error:", error);
       const errorMessage = error instanceof Error ? error.message : "Internal server error during CSV upload";
@@ -752,20 +829,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Price history upload endpoint  
+  // Price history upload endpoint
   app.post("/api/price-history/upload", requireAdmin, upload.single('file'), async (req, res) => {
     try {
       console.log('[price-history-upload] Starting price history upload, user:', req.user?.email);
-      
+
       if (!req.file) {
         console.log('[price-history-upload] No file provided');
         return res.status(400).json({ error: "No CSV file provided" });
       }
-      
+
       console.log('[price-history-upload] File received:', req.file.originalname, 'size:', req.file.size);
 
       const csvContent = req.file.buffer.toString('utf-8');
-      
+
       // Parse CSV
       let records;
       try {
@@ -787,15 +864,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Helper function to parse various date formats
       const parseDate = (dateStr: string): Date | null => {
         if (!dateStr) return null;
-        
+
         const trimmed = dateStr.trim();
-        
+
         // Try YYYY-MM-DD format first
         if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
           const date = new Date(trimmed + 'T12:00:00Z');
           if (!isNaN(date.getTime())) return date;
         }
-        
+
         // Try M/D/YYYY or MM/DD/YYYY format
         const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
         if (slashMatch) {
@@ -803,11 +880,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0));
           if (!isNaN(date.getTime())) return date;
         }
-        
+
         // Fallback: try native Date parsing
         const date = new Date(trimmed);
         if (!isNaN(date.getTime())) return date;
-        
+
         return null;
       };
 
@@ -854,14 +931,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             submittedAt: changeDate,
           });
           results.success++;
-          
+
         } catch (error) {
           let errorMessage = "Unknown error";
-          
+
           if (error instanceof Error) {
             errorMessage = error.message;
           }
-          
+
           results.errors.push({
             row: rowNumber,
             error: errorMessage,
@@ -870,7 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(results);
-      
+
     } catch (error) {
       console.error("Price history upload error:", error);
       res.status(500).json({ error: "Internal server error during price history upload" });

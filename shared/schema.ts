@@ -2,7 +2,9 @@ import { pgTable, text, serial, decimal, timestamp, boolean, integer } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table for authentication and role management
+// ============================================================================
+// LEGACY: Users table - KEEP FOR MIGRATION, REMOVE AFTER MIGRATION COMPLETE
+// ============================================================================
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -10,6 +12,18 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("standard"), // 'admin' or 'standard'
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ============================================================================
+// NEW: Profiles table - Links to Supabase auth.users
+// ============================================================================
+export const profiles = pgTable("profiles", {
+  id: text("id").primaryKey(), // UUID from Supabase auth.users
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default("standard"), // 'admin' or 'standard'
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Materials table - core entity
@@ -24,7 +38,7 @@ export const materials = pgTable("materials", {
   currentPrice: decimal("current_price", { precision: 10, scale: 2 }).notNull(),
   previousPrice: decimal("previous_price", { precision: 10, scale: 2 }),
   lastUpdated: timestamp("last_updated").defaultNow().notNull(),
-  updatedBy: integer("updated_by").references(() => users.id),
+  updatedBy: text("updated_by").references(() => profiles.id), // Changed: integer -> text, users -> profiles
 });
 
 // Price history for tracking changes over time
@@ -34,9 +48,9 @@ export const priceHistory = pgTable("price_history", {
   oldPrice: decimal("old_price", { precision: 10, scale: 2 }),
   newPrice: decimal("new_price", { precision: 10, scale: 2 }).notNull(),
   changePercent: decimal("change_percent", { precision: 5, scale: 2 }),
-  submittedBy: integer("submitted_by").references(() => users.id).notNull(),
+  submittedBy: text("submitted_by").references(() => profiles.id).notNull(), // Changed: integer -> text, users -> profiles
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
-  approvedBy: integer("approved_by").references(() => users.id),
+  approvedBy: text("approved_by").references(() => profiles.id), // Changed: integer -> text, users -> profiles
   approvedAt: timestamp("approved_at"),
   status: text("status").notNull().default("pending"), // 'pending', 'approved', 'rejected'
   notes: text("notes"),
@@ -49,10 +63,10 @@ export const priceChangeRequests = pgTable("price_change_requests", {
   distributor: text("distributor").notNull(),
   requestedPrice: decimal("requested_price", { precision: 10, scale: 2 }).notNull(),
   currentPrice: decimal("current_price", { precision: 10, scale: 2 }),
-  submittedBy: integer("submitted_by").references(() => users.id).notNull(),
+  submittedBy: text("submitted_by").references(() => profiles.id).notNull(), // Changed: integer -> text, users -> profiles
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   status: text("status").notNull().default("pending"), // 'pending', 'approved', 'rejected'
-  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedBy: text("reviewed_by").references(() => profiles.id), // Changed: integer -> text, users -> profiles
   reviewedAt: timestamp("reviewed_at"),
   notes: text("notes"),
   slackMessageTs: text("slack_message_ts"), // Slack message timestamp for tracking
@@ -63,20 +77,20 @@ export const LOCATIONS = ["DFW", "ATX", "HOU", "OKC", "ATL", "ARK", "NSH"] as co
 
 // Manufacturer options enum
 export const MANUFACTURERS = [
-  "Atlas", "Malarky", "Tri-Built", "CertainTeed", "Tamko", 
+  "Atlas", "Malarky", "Tri-Built", "CertainTeed", "Tamko",
   "GAF", "Owens Corning", "IKO", "Other"
 ] as const;
 
 // Product category options enum
 export const PRODUCT_CATEGORIES = [
-  "Shingle", "Accessory", "Decking", "Underlayment", 
+  "Shingle", "Accessory", "Decking", "Underlayment",
   "Ventilation", "Flashing", "Garage Door", "Door Motor", "Other"
 ] as const;
 
 // Distributor options enum with ticker mapping
 export const DISTRIBUTORS = {
   "ABCSupply": "ABC",
-  "Beacon": "QXO", 
+  "Beacon": "QXO",
   "SRSProducts": "SRS",
   "CommercialDistributors": "CDH",
   "Other": "OTH"
@@ -84,10 +98,20 @@ export const DISTRIBUTORS = {
 
 export const DISTRIBUTOR_NAMES = Object.keys(DISTRIBUTORS) as [keyof typeof DISTRIBUTORS, ...(keyof typeof DISTRIBUTORS)[]];
 
+// ============================================================================
 // Zod schemas for validation
+// ============================================================================
+
+// LEGACY: User schema - KEEP FOR MIGRATION
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+});
+
+// NEW: Profile schema for Supabase Auth
+export const insertProfileSchema = createInsertSchema(profiles).omit({
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertMaterialSchema = createInsertSchema(materials).omit({
@@ -122,9 +146,18 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
+// ============================================================================
 // Type exports
+// ============================================================================
+
+// LEGACY: User types - KEEP FOR MIGRATION
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+// NEW: Profile types for Supabase Auth
+export type Profile = typeof profiles.$inferSelect;
+export type InsertProfile = z.infer<typeof insertProfileSchema>;
+
 export type Material = typeof materials.$inferSelect;
 export type InsertMaterial = z.infer<typeof insertMaterialSchema>;
 export type PriceHistory = typeof priceHistory.$inferSelect;
