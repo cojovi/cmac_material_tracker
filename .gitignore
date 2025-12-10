@@ -21,3 +21,4 @@ supa_auth.txt
 *.sqlite3
 .config/
 .local/
+database_files/
