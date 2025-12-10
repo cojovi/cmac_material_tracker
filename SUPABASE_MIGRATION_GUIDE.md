@@ -51,7 +51,7 @@ This guide walks you through the complete migration from Replit + Neon to Supaba
 ### Step 1: Apply Database Migration
 
 1. **Go to Supabase Dashboard**
-   - Navigate to: https://supabase.com/dashboard/project/khjxwllahktqhiegouzt
+   - Navigate to: https://supabase.com/dashboard/project/your-project-id
    - Click "SQL Editor" in the left sidebar
 
 2. **Run Migration SQL**
@@ -249,9 +249,9 @@ The app should start on http://localhost:5000
 ### Required Server Variables (`.env`)
 
 ```bash
-SUPABASE_URL=https://khjxwllahktqhiegouzt.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtoanh3bGxhaGt0cWhpZWdvdXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NTU0MzMsImV4cCI6MjA4MDUzMTQzM30.vVU_FwwMZzUucnEUeXqa6dlCBJhi3OvAiN7Vy1S6gwM
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtoanh3bGxhaGt0cWhpZWdvdXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDk1NTQzMywiZXhwIjoyMDgwNTMxNDMzfQ.wKSyrNbHunLDPuKEuKttY2YGf9uCm8c1R8Qc1N8xPlA
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 # Optional: Keep these if using Slack integration
 SLACK_BOT_TOKEN=your-slack-bot-token
@@ -261,8 +261,8 @@ SLACK_CHANNEL_ID=your-slack-channel-id
 ### Required Client Variables (`.env.local`)
 
 ```bash
-VITE_SUPABASE_URL=https://khjxwllahktqhiegouzt.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtoanh3bGxhaGt0cWhpZWdvdXp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NTU0MzMsImV4cCI6MjA4MDUzMTQzM30.vVU_FwwMZzUucnEUeXqa6dlCBJhi3OvAiN7Vy1S6gwM
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 ---
